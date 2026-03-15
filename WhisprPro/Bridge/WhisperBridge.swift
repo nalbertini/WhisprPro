@@ -34,7 +34,7 @@ actor WhisperBridge {
         if let ctx = context {
             wrapper_free(ctx)
         }
-        let pathStr = path.path()
+        let pathStr = path.path(percentEncoded: false)
         let exists = FileManager.default.fileExists(atPath: pathStr)
         let size = (try? FileManager.default.attributesOfItem(atPath: pathStr)[.size] as? Int64) ?? 0
         logger.info("Loading model: \(pathStr), exists: \(exists), size: \(size) bytes")
@@ -63,7 +63,7 @@ actor WhisperBridge {
         }
 
         isCancelled = false
-        let audioPathStr = audioPath.path()
+        let audioPathStr = audioPath.path(percentEncoded: false)
         let languageStr = language
 
         let result = await withCheckedContinuation { continuation in

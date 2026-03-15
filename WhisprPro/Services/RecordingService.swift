@@ -144,7 +144,7 @@ final class RecordingService {
         }
 
         // Verify file has content
-        let fileSize = (try? FileManager.default.attributesOfItem(atPath: tempFile.path())[.size] as? Int) ?? 0
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: tempFile.path(percentEncoded: false))[.size] as? Int) ?? 0
         logger.info("Recording stopped - file size: \(fileSize) bytes")
 
         let fm = FileManager.default
@@ -155,7 +155,7 @@ final class RecordingService {
         let filename = "Recording_\(formatter.string(from: Date())).wav"
         let destination = recordingsDirectory.appendingPathComponent(filename)
 
-        if fm.fileExists(atPath: destination.path()) {
+        if fm.fileExists(atPath: destination.path(percentEncoded: false)) {
             try fm.removeItem(at: destination)
         }
         try fm.moveItem(at: tempFile, to: destination)

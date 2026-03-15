@@ -80,7 +80,7 @@ actor TranscriptionService {
         let accessing = sourceURL.startAccessingSecurityScopedResource()
         defer { if accessing { sourceURL.stopAccessingSecurityScopedResource() } }
 
-        logger.info("Source: \(sourceURL.path()), exists: \(FileManager.default.fileExists(atPath: sourceURL.path()))")
+        logger.info("Source: \(sourceURL.path(percentEncoded: false)), exists: \(FileManager.default.fileExists(atPath: sourceURL.path(percentEncoded: false)))")
 
         if sourceURL.pathExtension.lowercased() == "wav" {
             // Recording output is already WAV — use directly or copy to temp
@@ -94,7 +94,7 @@ actor TranscriptionService {
         }
 
         let modelPath = modelManager.modelPath(name: transcription.modelName, kind: .whisper)
-        logger.info("Model path: \(modelPath.path()), exists: \(FileManager.default.fileExists(atPath: modelPath.path()))")
+        logger.info("Model path: \(modelPath.path(percentEncoded: false)), exists: \(FileManager.default.fileExists(atPath: modelPath.path(percentEncoded: false)))")
         try await whisperBridge.loadModel(path: modelPath)
 
         let segments = try await whisperBridge.transcribe(

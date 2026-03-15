@@ -25,7 +25,7 @@ struct AudioConverter {
     }
 
     static func convertToWAV(input: URL, output: URL) async throws {
-        guard FileManager.default.fileExists(atPath: input.path()) else {
+        guard FileManager.default.fileExists(atPath: input.path(percentEncoded: false)) else {
             throw AudioConverterError.fileNotFound
         }
         guard isSupported(input) else {

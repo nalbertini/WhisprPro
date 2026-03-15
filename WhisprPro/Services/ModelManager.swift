@@ -38,7 +38,7 @@ final class ModelManager: Sendable {
     }
 
     func isModelDownloaded(name: String, kind: ModelKind) -> Bool {
-        FileManager.default.fileExists(atPath: modelPath(name: name, kind: kind).path())
+        FileManager.default.fileExists(atPath: modelPath(name: name, kind: kind).path(percentEncoded: false))
     }
 
     func ensureDirectoriesExist() throws {
@@ -54,7 +54,7 @@ final class ModelManager: Sendable {
         let delegate = DownloadDelegate(progressHandler: progress)
         let (fileURL, _) = try await delegate.download(from: definition.downloadURL)
 
-        if FileManager.default.fileExists(atPath: destination.path()) {
+        if FileManager.default.fileExists(atPath: destination.path(percentEncoded: false)) {
             try FileManager.default.removeItem(at: destination)
         }
         try FileManager.default.moveItem(at: fileURL, to: destination)
@@ -64,7 +64,7 @@ final class ModelManager: Sendable {
 
     func deleteModel(name: String, kind: ModelKind) throws {
         let path = modelPath(name: name, kind: kind)
-        if FileManager.default.fileExists(atPath: path.path()) {
+        if FileManager.default.fileExists(atPath: path.path(percentEncoded: false)) {
             try FileManager.default.removeItem(at: path)
         }
     }
