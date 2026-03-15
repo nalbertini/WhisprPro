@@ -85,27 +85,42 @@ actor YouTubeService {
         logger.info("Downloading audio from: \(url)")
         progress("Fetching video info...")
 
+        // Find ffmpeg path for yt-dlp
+        let ffmpegPaths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"]
+        let ffmpegDir = ffmpegPaths.first { FileManager.default.fileExists(atPath: "\($0)/ffmpeg") }
+
         // Run yt-dlp on background thread with async continuation
-        let exitCode = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int32, Error>) in
+        let result: (exitCode: Int32, stderr: String) = try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let proc = Process()
                     proc.executableURL = URL(fileURLWithPath: ytDlp)
-                    proc.arguments = [
+
+                    var args = [
                         "-x",
                         "--audio-format", "wav",
                         "--audio-quality", "0",
                         "--no-playlist",
-                        "--no-warnings",
                         "--newline",
                         "-o", outputTemplate,
-                        url
                     ]
+                    if let dir = ffmpegDir {
+                        args += ["--ffmpeg-location", dir]
+                    }
+                    args.append(url)
+                    proc.arguments = args
+
+                    // Set PATH so yt-dlp can find dependencies
+                    var env = ProcessInfo.processInfo.environment
+                    env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+                    proc.environment = env
 
                     let outPipe = Pipe()
                     let errPipe = Pipe()
                     proc.standardOutput = outPipe
                     proc.standardError = errPipe
+
+                    var stderrData = Data()
 
                     outPipe.fileHandleForReading.readabilityHandler = { handle in
                         let data = handle.availableData
@@ -120,9 +135,16 @@ actor YouTubeService {
                         }
                     }
 
+                    errPipe.fileHandleForReading.readabilityHandler = { handle in
+                        let data = handle.availableData
+                        if !data.isEmpty { stderrData.append(data) }
+                    }
+
                     proc.terminationHandler = { p in
                         outPipe.fileHandleForReading.readabilityHandler = nil
-                        continuation.resume(returning: p.terminationStatus)
+                        errPipe.fileHandleForReading.readabilityHandler = nil
+                        let errStr = String(data: stderrData, encoding: .utf8) ?? ""
+                        continuation.resume(returning: (p.terminationStatus, errStr))
                     }
 
                     try proc.run()
@@ -132,8 +154,10 @@ actor YouTubeService {
             }
         }
 
-        guard exitCode == 0 else {
-            throw YouTubeError.downloadFailed("yt-dlp exited with code \(exitCode)")
+        guard result.exitCode == 0 else {
+            let errMsg = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            logger.error("yt-dlp failed: \(errMsg)")
+            throw YouTubeError.downloadFailed(errMsg.isEmpty ? "yt-dlp exited with code \(result.exitCode)" : errMsg)
         }
 
         // Find the downloaded file
