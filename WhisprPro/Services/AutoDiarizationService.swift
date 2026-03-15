@@ -1,132 +1,126 @@
 import Foundation
-import Speech
+import AVFoundation
+import Accelerate
 import os
 
 private let logger = Logger(subsystem: "com.whisprpro", category: "AutoDiarization")
 
 actor AutoDiarizationService {
 
-    /// Analyze audio and assign speakers to existing segments based on voice pitch clustering
+    /// Analyze audio and assign speakers to existing segments based on voice characteristics
     func assignSpeakers(
         audioURL: URL,
         segments: [Segment],
         progress: @escaping @Sendable (String) -> Void
     ) async throws -> Int {
-        guard SFSpeechRecognizer.authorizationStatus() == .authorized ||
-              SFSpeechRecognizer.authorizationStatus() == .notDetermined else {
-            throw AutoDiarizationError.permissionDenied
-        }
+        guard !segments.isEmpty else { return 0 }
 
-        // Request authorization if needed
-        let authorized = await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { status in
-                continuation.resume(returning: status == .authorized)
-            }
-        }
-        guard authorized else {
-            throw AutoDiarizationError.permissionDenied
-        }
-
-        progress("Analyzing voice patterns...")
+        progress("Loading audio...")
         logger.info("Starting auto-diarization for \(segments.count) segments")
 
-        // Extract average pitch per segment using SFSpeechRecognizer
-        guard let recognizer = SFSpeechRecognizer() else {
-            throw AutoDiarizationError.recognizerNotAvailable
+        // Load audio as float samples
+        let audioFile = try AVAudioFile(forReading: audioURL)
+        guard let format = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: audioFile.fileFormat.sampleRate,
+            channels: 1,
+            interleaved: false
+        ) else {
+            throw AutoDiarizationError.audioLoadFailed
         }
 
-        let request = SFSpeechURLRecognitionRequest(url: audioURL)
-        request.shouldReportPartialResults = false
+        let frameCount = AVAudioFrameCount(audioFile.length)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+            throw AutoDiarizationError.audioLoadFailed
+        }
+        try audioFile.read(into: buffer)
 
-        // Run recognition to get voice analytics
-        let result = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<SFSpeechRecognitionResult, Error>) in
-            recognizer.recognitionTask(with: request) { result, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else if let result, result.isFinal {
-                    continuation.resume(returning: result)
-                }
-            }
+        guard let channelData = buffer.floatChannelData?[0] else {
+            throw AutoDiarizationError.audioLoadFailed
         }
 
-        progress("Extracting voice features...")
+        let sampleRate = Float(audioFile.fileFormat.sampleRate)
+        let totalSamples = Int(buffer.frameLength)
 
-        // Extract pitch values from voice analytics per transcription segment
-        var segmentPitches: [(segmentIndex: Int, avgPitch: Double)] = []
+        progress("Analyzing voice patterns...")
 
-        let appleSegments = result.bestTranscription.segments
+        // Extract features per segment: average energy + zero-crossing rate + spectral centroid
+        var segmentFeatures: [(index: Int, energy: Float, zcr: Float, spectralCentroid: Float)] = []
 
         for (i, segment) in segments.enumerated() {
-            // Find matching Apple segments by timestamp overlap
-            let matchingAppleSegs = appleSegments.filter { appleSeg in
-                let appleStart = appleSeg.timestamp
-                let appleEnd = appleStart + appleSeg.duration
-                let overlapStart = max(segment.startTime, appleStart)
-                let overlapEnd = min(segment.endTime, appleEnd)
-                return overlapEnd > overlapStart
+            let startSample = min(Int(Float(segment.startTime) * sampleRate), totalSamples - 1)
+            let endSample = min(Int(Float(segment.endTime) * sampleRate), totalSamples)
+            let count = max(endSample - startSample, 1)
+
+            // RMS energy
+            var rms: Float = 0
+            vDSP_rmsqv(channelData.advanced(by: startSample), 1, &rms, vDSP_Length(count))
+
+            // Zero-crossing rate (correlates with pitch)
+            var zcr: Float = 0
+            for j in (startSample + 1)..<endSample {
+                if (channelData[j] >= 0) != (channelData[j - 1] >= 0) {
+                    zcr += 1
+                }
             }
+            zcr /= Float(count)
 
-            // Get average pitch from matching segments
-            var pitchSum: Double = 0
-            var pitchCount = 0
+            // Spectral centroid estimate via autocorrelation-based pitch
+            let frameSize = min(2048, count)
+            var autocorr = [Float](repeating: 0, count: frameSize)
+            let segPtr = channelData.advanced(by: startSample)
+            vDSP_conv(segPtr, 1, segPtr, 1, &autocorr, 1, vDSP_Length(frameSize), vDSP_Length(frameSize))
 
-            for appleSeg in matchingAppleSegs {
-                if let voiceAnalytics = appleSeg.voiceAnalytics {
-                    let pitchValues = voiceAnalytics.pitch.acousticFeatureValuePerFrame
-                    for value in pitchValues {
-                        pitchSum += value
-                        pitchCount += 1
-                    }
+            // Find first peak after zero-crossing in autocorrelation (fundamental period)
+            var pitchEstimate: Float = 0
+            let minLag = Int(sampleRate / 500)  // Max 500 Hz
+            let maxLag = min(Int(sampleRate / 80), frameSize - 1)  // Min 80 Hz
+            if maxLag > minLag {
+                var maxVal: Float = 0
+                var maxIdx: vDSP_Length = 0
+                vDSP_maxvi(autocorr, 1, &maxVal, &maxIdx, vDSP_Length(maxLag - minLag))
+                let lag = Int(maxIdx) + minLag
+                if lag > 0 {
+                    pitchEstimate = sampleRate / Float(lag)
                 }
             }
 
-            if pitchCount > 0 {
-                segmentPitches.append((segmentIndex: i, avgPitch: pitchSum / Double(pitchCount)))
-            }
-        }
-
-        guard !segmentPitches.isEmpty else {
-            logger.warning("No voice analytics data available")
-            throw AutoDiarizationError.noVoiceData
+            segmentFeatures.append((index: i, energy: rms, zcr: zcr, spectralCentroid: pitchEstimate))
         }
 
         progress("Clustering speakers...")
 
-        // Simple clustering: split by pitch into groups using k-means with k=2 initially
-        // Find natural pitch boundary
-        let pitches = segmentPitches.map(\.avgPitch).sorted()
-        let medianPitch = pitches[pitches.count / 2]
+        // Normalize features
+        let energies = segmentFeatures.map(\.energy)
+        let zcrs = segmentFeatures.map(\.zcr)
+        let pitches = segmentFeatures.map(\.spectralCentroid)
 
-        // Find largest gap in sorted pitches to determine speaker boundary
-        var maxGap: Double = 0
-        var gapIndex = pitches.count / 2
-        for i in 1..<pitches.count {
-            let gap = pitches[i] - pitches[i-1]
-            if gap > maxGap {
-                maxGap = gap
-                gapIndex = i
-            }
+        let eMin = energies.min() ?? 0, eMax = max(energies.max() ?? 1, eMin + 0.001)
+        let zMin = zcrs.min() ?? 0, zMax = max(zcrs.max() ?? 1, zMin + 0.001)
+        let pMin = pitches.min() ?? 0, pMax = max(pitches.max() ?? 1, pMin + 0.001)
+
+        // Create normalized feature vectors [energy, zcr, pitch]
+        var featureVectors: [[Float]] = []
+        for f in segmentFeatures {
+            featureVectors.append([
+                (f.energy - eMin) / (eMax - eMin),
+                (f.zcr - zMin) / (zMax - zMin),
+                (f.spectralCentroid - pMin) / (pMax - pMin) * 2.0  // Weight pitch higher
+            ])
         }
 
-        // If the gap is significant (>15% of range), use it as boundary
-        let range = pitches.last! - pitches.first!
-        let threshold: Double
-        if range > 0 && maxGap > range * 0.15 {
-            threshold = (pitches[gapIndex - 1] + pitches[gapIndex]) / 2
-        } else {
-            threshold = medianPitch
-        }
+        // K-means clustering with k=2
+        let assignments = kMeansClustering(vectors: featureVectors, k: 2)
 
-        // Assign speakers based on pitch
+        // Create speakers and assign
         let speakerColors = ["#007AFF", "#FF9500", "#34C759", "#FF3B30"]
+        var speakerMap: [Int: Speaker] = [:]
         var speakerCount = 0
-        var speakerMap: [Int: Speaker] = [:] // 0 or 1 -> Speaker
 
-        for sp in segmentPitches {
-            let group = sp.avgPitch < threshold ? 0 : 1
-            let segment = segments[sp.segmentIndex]
+        for (i, cluster) in assignments.enumerated() {
+            let segment = segments[segmentFeatures[i].index]
 
-            if speakerMap[group] == nil {
+            if speakerMap[cluster] == nil {
                 speakerCount += 1
                 let speaker = Speaker(
                     label: "Speaker \(speakerCount)",
@@ -136,10 +130,10 @@ actor AutoDiarizationService {
                 if let context = segment.transcription?.modelContext {
                     context.insert(speaker)
                 }
-                speakerMap[group] = speaker
+                speakerMap[cluster] = speaker
             }
 
-            segment.speaker = speakerMap[group]
+            segment.speaker = speakerMap[cluster]
         }
 
         logger.info("Auto-diarization complete: \(speakerCount) speakers detected")
@@ -147,17 +141,75 @@ actor AutoDiarizationService {
 
         return speakerCount
     }
+
+    /// Simple k-means clustering
+    private func kMeansClustering(vectors: [[Float]], k: Int, maxIterations: Int = 20) -> [Int] {
+        let n = vectors.count
+        guard n > 1, let dim = vectors.first?.count else { return Array(repeating: 0, count: n) }
+
+        // Initialize centroids with first and last (sorted by first feature)
+        let sorted = vectors.enumerated().sorted { $0.element[0] < $1.element[0] }
+        var centroids: [[Float]] = [
+            sorted.first!.element,
+            sorted.last!.element
+        ]
+
+        var assignments = [Int](repeating: 0, count: n)
+
+        for _ in 0..<maxIterations {
+            // Assign each point to nearest centroid
+            var changed = false
+            for i in 0..<n {
+                var bestCluster = 0
+                var bestDist: Float = .infinity
+                for c in 0..<k {
+                    var dist: Float = 0
+                    for d in 0..<dim {
+                        let diff = vectors[i][d] - centroids[c][d]
+                        dist += diff * diff
+                    }
+                    if dist < bestDist {
+                        bestDist = dist
+                        bestCluster = c
+                    }
+                }
+                if assignments[i] != bestCluster {
+                    assignments[i] = bestCluster
+                    changed = true
+                }
+            }
+
+            if !changed { break }
+
+            // Update centroids
+            for c in 0..<k {
+                var sum = [Float](repeating: 0, count: dim)
+                var count: Float = 0
+                for i in 0..<n {
+                    if assignments[i] == c {
+                        for d in 0..<dim {
+                            sum[d] += vectors[i][d]
+                        }
+                        count += 1
+                    }
+                }
+                if count > 0 {
+                    centroids[c] = sum.map { $0 / count }
+                }
+            }
+        }
+
+        return assignments
+    }
 }
 
 enum AutoDiarizationError: Error, LocalizedError {
-    case permissionDenied
-    case recognizerNotAvailable
+    case audioLoadFailed
     case noVoiceData
 
     var errorDescription: String? {
         switch self {
-        case .permissionDenied: "Speech recognition permission required. Enable it in System Settings > Privacy & Security > Speech Recognition"
-        case .recognizerNotAvailable: "Speech recognizer not available"
+        case .audioLoadFailed: "Failed to load audio file for analysis"
         case .noVoiceData: "Could not extract voice data for speaker detection"
         }
     }
