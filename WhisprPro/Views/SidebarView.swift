@@ -32,7 +32,7 @@ struct SidebarView: View {
                 .buttonStyle(.plain)
 
                 Button {
-                    viewModel.showRecordingSheet = true
+                    viewModel.isRecordingMode = true
                 } label: {
                     Label("Record", systemImage: "record.circle")
                         .foregroundStyle(.red)

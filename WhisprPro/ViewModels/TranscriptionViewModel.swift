@@ -11,6 +11,7 @@ final class TranscriptionViewModel {
     var searchText = ""
     var showRecordingSheet = false
     var showFileImporter = false
+    var isRecordingMode = false
 
     private let modelContext: ModelContext
     private(set) var transcriptionService: TranscriptionService

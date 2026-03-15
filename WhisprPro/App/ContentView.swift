@@ -42,7 +42,9 @@ struct ContentView: View {
             SidebarView(viewModel: viewModel)
                 .frame(minWidth: 220)
         } detail: {
-            if let transcription = viewModel.selectedTranscription {
+            if viewModel.isRecordingMode {
+                InlineRecordingView(viewModel: viewModel, playerViewModel: playerViewModel)
+            } else if let transcription = viewModel.selectedTranscription {
                 HSplitView {
                     TranscriptContentView(
                         transcription: transcription,
@@ -63,12 +65,29 @@ struct ContentView: View {
                     }
                 }
             } else {
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
                     Image(systemName: "waveform")
                         .font(.system(size: 48))
                         .foregroundStyle(.quaternary)
-                    Text("Select or import a transcription")
+                    Text("Select a transcription or start recording")
                         .foregroundStyle(.secondary)
+
+                    HStack(spacing: 12) {
+                        Button {
+                            viewModel.showFileImporter = true
+                        } label: {
+                            Label("Import File", systemImage: "doc.badge.plus")
+                        }
+                        .buttonStyle(.bordered)
+
+                        Button {
+                            viewModel.isRecordingMode = true
+                        } label: {
+                            Label("Record", systemImage: "record.circle")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    }
                 }
             }
         }
@@ -97,14 +116,6 @@ struct ContentView: View {
                 }
             }
         }
-        .sheet(isPresented: Binding(
-            get: { viewModel.showRecordingSheet },
-            set: { viewModel.showRecordingSheet = $0 }
-        )) {
-            RecordingView(viewModel: RecordingViewModel()) { recordedURL in
-                Task { await viewModel.importFile(url: recordedURL) }
-            }
-        }
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             guard let provider = providers.first else { return false }
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
@@ -119,7 +130,7 @@ struct ContentView: View {
             viewModel.showFileImporter = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .newRecording)) { _ in
-            viewModel.showRecordingSheet = true
+            viewModel.isRecordingMode = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleInspector)) { _ in
             withAnimation { showInspector.toggle() }
