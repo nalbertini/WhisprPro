@@ -21,13 +21,20 @@ struct SidebarView: View {
             .searchable(text: $viewModel.searchText, prompt: "Search")
 
             Divider()
+                .background(Color(red: 0.227, green: 0.227, blue: 0.235))
 
-            VStack(spacing: 8) {
+            VStack(spacing: 4) {
                 Button {
                     viewModel.showFileImporter = true
                 } label: {
                     Label("Import File", systemImage: "doc.badge.plus")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color(red: 0.776, green: 0.776, blue: 0.800))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Color(red: 0.220, green: 0.220, blue: 0.228))
+                        .cornerRadius(6)
                 }
                 .buttonStyle(.plain)
 
@@ -35,8 +42,13 @@ struct SidebarView: View {
                     viewModel.isRecordingMode = true
                 } label: {
                     Label("Record", systemImage: "record.circle")
-                        .foregroundStyle(.red)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color(red: 1.0, green: 0.271, blue: 0.227))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Color(red: 0.220, green: 0.220, blue: 0.228))
+                        .cornerRadius(6)
                 }
                 .buttonStyle(.plain)
 
@@ -44,13 +56,19 @@ struct SidebarView: View {
                     NotificationCenter.default.post(name: .showYouTube, object: nil)
                 } label: {
                     Label("YouTube", systemImage: "play.rectangle")
-                        .foregroundStyle(.red)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color(red: 1.0, green: 0.271, blue: 0.227))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 7)
+                        .background(Color(red: 0.220, green: 0.220, blue: 0.228))
+                        .cornerRadius(6)
                 }
                 .buttonStyle(.plain)
             }
-            .padding()
+            .padding(12)
         }
+        .background(Color(red: 0.173, green: 0.173, blue: 0.180))
     }
 
     private var filteredTranscriptions: [Transcription] {
@@ -67,16 +85,17 @@ struct TranscriptionRow: View {
     let transcription: Transcription
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
             Text(transcription.title)
-                .font(.body)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(Color(red: 0.961, green: 0.961, blue: 0.969))
                 .lineLimit(1)
 
-            HStack {
+            HStack(spacing: 6) {
                 statusIndicator
                 Text(formattedDuration)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(red: 0.388, green: 0.388, blue: 0.400))
             }
         }
         .padding(.vertical, 2)
@@ -86,25 +105,26 @@ struct TranscriptionRow: View {
     private var statusIndicator: some View {
         switch transcription.status {
         case .completed:
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .font(.caption)
+            Circle()
+                .fill(Color(red: 0.188, green: 0.820, blue: 0.345))
+                .frame(width: 7, height: 7)
         case .transcribing, .diarizing:
             HStack(spacing: 4) {
-                ProgressView()
-                    .scaleEffect(0.6)
+                Circle()
+                    .fill(Color(red: 1.0, green: 0.624, blue: 0.039))
+                    .frame(width: 7, height: 7)
                 Text("\(Int(transcription.progress * 100))%")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
             }
         case .failed:
             Image(systemName: "exclamationmark.circle.fill")
-                .foregroundStyle(.red)
-                .font(.caption)
+                .foregroundStyle(Color(red: 1.0, green: 0.271, blue: 0.227))
+                .font(.system(size: 10))
         case .pending:
             Image(systemName: "clock")
-                .foregroundStyle(.secondary)
-                .font(.caption)
+                .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
+                .font(.system(size: 10))
         }
     }
 

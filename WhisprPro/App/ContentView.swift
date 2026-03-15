@@ -22,6 +22,13 @@ struct ContentView: View {
     @State private var showCaptions = false
     @State private var showYouTubeImport = false
 
+    // Design tokens
+    private let textMuted = Color(red: 0.290, green: 0.290, blue: 0.306)       // #4A4A4E
+    private let textTertiary = Color(red: 0.388, green: 0.388, blue: 0.400)    // #636366
+    private let textPrimary = Color(red: 0.961, green: 0.961, blue: 0.969)     // #F5F5F7
+    private let cardBackground = Color(red: 0.220, green: 0.220, blue: 0.228)  // #38383A
+    private let accentRed = Color(red: 1.0, green: 0.271, blue: 0.227)         // #FF453A
+
     var body: some View {
         Group {
             if let viewModel {
@@ -68,30 +75,106 @@ struct ContentView: View {
                     }
                 }
             } else {
-                VStack(spacing: 16) {
-                    Image(systemName: "waveform")
-                        .font(.system(size: 48))
-                        .foregroundStyle(.quaternary)
-                    Text("Select a transcription or start recording")
-                        .foregroundStyle(.secondary)
+                // Empty state
+                VStack(spacing: 20) {
+                    // Custom waveform icon: 7 bars
+                    HStack(alignment: .center, spacing: 5) {
+                        ForEach([16.0, 32.0, 48.0, 64.0, 48.0, 32.0, 16.0], id: \.self) { height in
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(textPrimary.opacity(0.2))
+                                .frame(width: 4, height: height)
+                        }
+                    }
 
-                    HStack(spacing: 12) {
+                    VStack(spacing: 6) {
+                        Text("No Transcription Selected")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(textTertiary)
+
+                        Text("Drag audio or video files here, or use the buttons below")
+                            .font(.system(size: 13))
+                            .foregroundStyle(textMuted)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 300)
+                    }
+
+                    HStack(spacing: 10) {
+                        // Import button
                         Button {
                             viewModel.showFileImporter = true
                         } label: {
-                            Label("Import File", systemImage: "doc.badge.plus")
+                            HStack(spacing: 6) {
+                                Image(systemName: "doc.badge.plus")
+                                Text("Import")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(textPrimary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(cardBackground)
+                            .cornerRadius(6)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.plain)
+                        .overlay(alignment: .bottomTrailing) {
+                            Text("⌘O")
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(textMuted)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 2)
+                                .background(Color(red: 0.173, green: 0.173, blue: 0.180))
+                                .cornerRadius(3)
+                                .offset(x: 4, y: 4)
+                        }
 
+                        // Record button
                         Button {
                             viewModel.isRecordingMode = true
                         } label: {
-                            Label("Record", systemImage: "record.circle")
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(.white)
+                                    .frame(width: 8, height: 8)
+                                Text("Record")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(accentRed)
+                            .cornerRadius(6)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.red)
+                        .buttonStyle(.plain)
+                        .overlay(alignment: .bottomTrailing) {
+                            Text("⌘R")
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(textMuted)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 2)
+                                .background(Color(red: 0.173, green: 0.173, blue: 0.180))
+                                .cornerRadius(3)
+                                .offset(x: 4, y: 4)
+                        }
+
+                        // YouTube button
+                        Button {
+                            NotificationCenter.default.post(name: .showYouTube, object: nil)
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "play.rectangle")
+                                Text("YouTube")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundStyle(textPrimary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(cardBackground)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
                     }
+                    .padding(.top, 4)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .frame(minWidth: 900, minHeight: 550)

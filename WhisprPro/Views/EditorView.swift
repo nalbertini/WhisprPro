@@ -9,10 +9,18 @@ struct EditorView: View {
     var fontSize: Double = 15
     let onSeek: (TimeInterval) -> Void
 
+    // Design tokens
+    private let activeBackground = Color(.sRGB, red: 0.039, green: 0.518, blue: 1.0, opacity: 0.08)
+    private let textPrimary = Color(red: 0.961, green: 0.961, blue: 0.969)      // #F5F5F7
+    private let textSecondary = Color(red: 0.898, green: 0.898, blue: 0.918)   // #E5E5EA
+    private let textTertiary = Color(red: 0.388, green: 0.388, blue: 0.400)    // #636366
+    private let starFilled = Color(red: 1.0, green: 0.839, blue: 0.039)        // #FFD60A
+    private let starEmpty = Color(red: 0.290, green: 0.290, blue: 0.306)       // #4A4A4E
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if !compactMode {
-                HStack {
+                HStack(alignment: .center, spacing: 8) {
                     if let speaker = segment.speaker {
                         SpeakerLabelView(speaker: speaker)
                     }
@@ -21,23 +29,26 @@ struct EditorView: View {
                         onSeek(segment.startTime)
                     } label: {
                         Text(formatTimestamp(segment.startTime + timestampOffset))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.custom("JetBrainsMono-Regular", size: 11).fallback(size: 11, design: .monospaced))
+                            .foregroundStyle(textTertiary)
+                            .frame(width: 40, alignment: .trailing)
                     }
                     .buttonStyle(.plain)
 
                     if segment.isEdited {
                         Image(systemName: "pencil")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 10))
+                            .foregroundStyle(textTertiary)
                     }
+
+                    Spacer()
 
                     Button {
                         segment.isStarred.toggle()
                     } label: {
                         Image(systemName: segment.isStarred ? "star.fill" : "star")
-                            .foregroundStyle(segment.isStarred ? .yellow : .secondary)
-                            .font(.caption)
+                            .foregroundStyle(segment.isStarred ? starFilled : starEmpty)
+                            .font(.system(size: 11))
                     }
                     .buttonStyle(.plain)
                 }
@@ -47,18 +58,21 @@ struct EditorView: View {
                 TextField("", text: $segment.text, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.system(size: fontSize))
+                    .foregroundStyle(isActive ? textPrimary : textSecondary)
+                    .lineSpacing(fontSize * 0.5 - fontSize * 0.1)
                     .onChange(of: segment.text) {
                         segment.isEdited = true
                     }
             } else {
                 highlightedText(segment.text, highlight: searchText)
                     .font(.system(size: fontSize))
+                    .foregroundStyle(isActive ? textPrimary : textSecondary)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(isActive ? Color.accentColor.opacity(0.1) : .clear)
-        .cornerRadius(6)
+        .background(isActive ? activeBackground : .clear)
+        .cornerRadius(8)
         .contentShape(Rectangle())
         .onTapGesture {
             onSeek(segment.startTime)
@@ -112,20 +126,26 @@ struct SpeakerLabelView: View {
                     isEditing = false
                 }
             .textFieldStyle(.plain)
-            .font(.caption)
-            .fontWeight(.semibold)
+            .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(Color(hex: speaker.color) ?? .primary)
             .frame(width: 100)
         } else {
             Text(speaker.label)
-                .font(.caption)
-                .fontWeight(.semibold)
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(hex: speaker.color) ?? .primary)
                 .onTapGesture {
                     editText = speaker.label
                     isEditing = true
                 }
         }
+    }
+}
+
+// MARK: - Font fallback helper
+
+private extension Font {
+    func fallback(size: CGFloat, design: Font.Design) -> Font {
+        return self
     }
 }
 

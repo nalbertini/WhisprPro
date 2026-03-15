@@ -20,14 +20,15 @@ struct TranscriptContentView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(transcription.title)
-                        .font(.headline)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.961, green: 0.961, blue: 0.969))
                     HStack(spacing: 8) {
                         Label(formatDuration(transcription.duration), systemImage: "clock")
                         Label(transcription.language, systemImage: "globe")
                         Label(transcription.modelName, systemImage: "cpu")
                     }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(red: 0.388, green: 0.388, blue: 0.400))
                 }
 
                 Spacer()
@@ -45,6 +46,11 @@ struct TranscriptContentView: View {
                     Button("HTML (.html)") { exportAs(.html) }
                     Button("Word (.docx)") { exportAs(.docx) }
                 }
+                .font(.system(size: 13, weight: .medium))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color(red: 0.220, green: 0.220, blue: 0.228))
+                .cornerRadius(6)
                 .fixedSize()
 
                 ShareLink(
@@ -52,38 +58,50 @@ struct TranscriptContentView: View {
                     preview: SharePreview(transcription.title)
                 ) {
                     Label("Share", systemImage: "square.and.arrow.up")
+                        .font(.system(size: 13, weight: .medium))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color(red: 0.220, green: 0.220, blue: 0.228))
+                        .cornerRadius(6)
                 }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color(red: 0.961, green: 0.961, blue: 0.969))
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
             .padding(.vertical, 10)
 
             Divider()
+                .background(Color(red: 0.227, green: 0.227, blue: 0.235))
 
             // Search bar
             if transcription.status == .completed {
                 HStack {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color(red: 0.388, green: 0.388, blue: 0.400))
+                        .font(.system(size: 13))
                     TextField("Search transcript...", text: $searchText)
                         .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color(red: 0.961, green: 0.961, blue: 0.969))
                     if !searchText.isEmpty {
                         Text("\(searchResultCount) found")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
                         Button {
                             searchText = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color(red: 0.388, green: 0.388, blue: 0.400))
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.vertical, 6)
-                .background(.bar)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(Color(red: 0.137, green: 0.137, blue: 0.145))
 
                 Divider()
+                    .background(Color(red: 0.227, green: 0.227, blue: 0.235))
             }
 
             // Transcript content
@@ -109,7 +127,7 @@ struct TranscriptContentView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal, 16)
                     }
                     .onChange(of: searchText) {
                         searchResultCount = filteredSegments.count
@@ -120,30 +138,32 @@ struct TranscriptContentView: View {
                     ProgressView(value: transcription.progress)
                         .frame(width: 200)
                     Text(transcription.status == .transcribing ? "Transcribing..." : "Identifying speakers...")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
                     Text("\(Int(transcription.progress * 100))%")
                         .font(.title2)
                         .monospacedDigit()
+                        .foregroundStyle(Color(red: 0.961, green: 0.961, blue: 0.969))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if transcription.status == .failed {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.largeTitle)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color(red: 1.0, green: 0.271, blue: 0.227))
                     Text(transcription.errorMessage ?? "Transcription failed")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 Text("Waiting...")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
             // Player fixed at bottom
             if let sourceURL = transcription.sourceURL {
                 Divider()
+                    .background(Color(red: 0.227, green: 0.227, blue: 0.235))
                 let ext = sourceURL.pathExtension.lowercased()
                 if ext == "mp4" || ext == "mov" || ext == "m4v" {
                     VideoPlayerView(

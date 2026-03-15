@@ -12,6 +12,15 @@ struct InlineRecordingView: View {
     @State private var errorMessage: String?
     @State private var showLiveCaptions = false
 
+    // Design tokens
+    private let textPrimary = Color(red: 0.961, green: 0.961, blue: 0.969)     // #F5F5F7
+    private let textTertiary = Color(red: 0.557, green: 0.557, blue: 0.576)    // #8E8E93
+    private let textQuaternary = Color(red: 0.388, green: 0.388, blue: 0.400)  // #636366
+    private let accentRed = Color(red: 1.0, green: 0.271, blue: 0.227)         // #FF453A
+    private let accentBlue = Color(red: 0.039, green: 0.518, blue: 1.0)        // #0A84FF
+    private let cardBackground = Color(red: 0.220, green: 0.220, blue: 0.228)  // #38383A
+    private let sidebarBackground = Color(red: 0.173, green: 0.173, blue: 0.180) // #2C2C2E
+
     private var isRecording: Bool {
         recordingService.isRecording || systemAudioService.isRecording
     }
@@ -23,8 +32,8 @@ struct InlineRecordingView: View {
             VStack(spacing: 32) {
                 // Title
                 Text("New Recording")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(textPrimary)
 
                 // Source picker
                 Picker("", selection: $recordSystemAudio) {
@@ -39,11 +48,11 @@ struct InlineRecordingView: View {
                 Button(action: toggleRecording) {
                     ZStack {
                         Circle()
-                            .fill(isRecording ? .red : .red.opacity(0.15))
+                            .fill(isRecording ? accentRed : accentRed.opacity(0.15))
                             .frame(width: 100, height: 100)
 
                         Circle()
-                            .strokeBorder(.red, lineWidth: 3)
+                            .strokeBorder(accentRed, lineWidth: 3)
                             .frame(width: 100, height: 100)
 
                         if isRecording {
@@ -52,7 +61,7 @@ struct InlineRecordingView: View {
                                 .frame(width: 32, height: 32)
                         } else {
                             Circle()
-                                .fill(.red)
+                                .fill(accentRed)
                                 .frame(width: 36, height: 36)
                         }
                     }
@@ -61,8 +70,8 @@ struct InlineRecordingView: View {
 
                 // Timer
                 Text(formatTime(recordSystemAudio ? systemAudioService.elapsedTime : recordingService.elapsedTime))
-                    .font(.system(size: 48, weight: .ultraLight, design: .monospaced))
-                    .foregroundStyle(isRecording ? .primary : .tertiary)
+                    .font(.system(size: 52, weight: .ultraLight, design: .monospaced))
+                    .foregroundStyle(isRecording ? textPrimary : textQuaternary)
 
                 // Waveform (mic only)
                 if !recordSystemAudio && recordingService.isRecording {
@@ -73,11 +82,11 @@ struct InlineRecordingView: View {
                     // Show active mic name
                     HStack(spacing: 4) {
                         Image(systemName: "mic.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.red)
+                            .font(.system(size: 10))
+                            .foregroundStyle(accentRed)
                         Text(activeMicName)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .font(.system(size: 12))
+                            .foregroundStyle(textTertiary)
                     }
                 }
 
@@ -86,7 +95,7 @@ struct InlineRecordingView: View {
                         Image(systemName: "speaker.wave.2")
                             .foregroundStyle(.orange)
                         Text("Capturing system audio...")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(textTertiary)
                     }
                 }
 
@@ -105,7 +114,7 @@ struct InlineRecordingView: View {
                 }
 
                 // Action buttons
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     if isRecording {
                         // Pause (mic only)
                         if !recordSystemAudio {
@@ -118,41 +127,67 @@ struct InlineRecordingView: View {
                             } label: {
                                 Label(recordingService.isPaused ? "Resume" : "Pause",
                                       systemImage: recordingService.isPaused ? "play.fill" : "pause.fill")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(textPrimary)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                                    .background(cardBackground)
+                                    .cornerRadius(8)
                             }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(.plain)
                         }
 
                         Button {
                             stopAndTranscribe()
                         } label: {
                             Label("Stop & Transcribe", systemImage: "stop.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(accentBlue)
+                                .cornerRadius(8)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.plain)
 
                         Button("Cancel") {
                             cancelRecording()
                         }
-                        .buttonStyle(.bordered)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(textPrimary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(cardBackground)
+                        .cornerRadius(8)
+                        .buttonStyle(.plain)
                     } else {
                         Button("Back") {
                             viewModel.isRecordingMode = false
                         }
-                        .buttonStyle(.bordered)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(textPrimary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(cardBackground)
+                        .cornerRadius(8)
+                        .buttonStyle(.plain)
 
                         Button {
                             showLiveCaptions = true
                         } label: {
                             Label("Live Captions", systemImage: "captions.bubble")
+                                .font(.system(size: 12))
+                                .foregroundStyle(textQuaternary)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.plain)
                     }
                 }
 
                 // Error
                 if let error = errorMessage {
                     Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
+                        .font(.system(size: 12))
+                        .foregroundStyle(accentRed)
                         .padding(.horizontal, 40)
                 }
             }
