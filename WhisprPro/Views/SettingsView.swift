@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage("exportIncludeTimestamps") private var includeTimestamps = true
     @AppStorage("exportIncludeSpeakers") private var includeSpeakers = true
     @AppStorage("defaultAudioInput") private var defaultAudioInput = ""
+    @State private var showModelImporter = false
 
     var body: some View {
         TabView {
@@ -26,9 +27,53 @@ struct SettingsView: View {
     }
 
     private var modelsTab: some View {
-        ModelManagerView(
-            viewModel: ModelManagerViewModel(modelContext: modelContext)
-        )
+        VStack {
+            ModelManagerView(viewModel: ModelManagerViewModel(modelContext: modelContext))
+
+            Divider()
+
+            Button("Import Custom Model...") {
+                showModelImporter = true
+            }
+            .padding(.bottom, 8)
+        }
+        .fileImporter(
+            isPresented: $showModelImporter,
+            allowedContentTypes: [.init(filenameExtension: "bin")!],
+            allowsMultipleSelection: false
+        ) { result in
+            if case .success(let urls) = result, let url = urls.first {
+                importCustomModel(url: url)
+            }
+        }
+    }
+
+    private func importCustomModel(url: URL) {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+
+        let manager = ModelManager()
+        let destDir = manager.modelsDirectory(for: .whisper)
+        try? FileManager.default.createDirectory(at: destDir, withIntermediateDirectories: true)
+        let dest = destDir.appendingPathComponent(url.lastPathComponent)
+
+        do {
+            if FileManager.default.fileExists(atPath: dest.path(percentEncoded: false)) {
+                try FileManager.default.removeItem(at: dest)
+            }
+            try FileManager.default.copyItem(at: url, to: dest)
+
+            // Add to SwiftData
+            let name = url.deletingPathExtension().lastPathComponent
+            let size = (try? FileManager.default.attributesOfItem(atPath: dest.path(percentEncoded: false))[.size] as? Int64) ?? 0
+            let model = MLModelInfo(name: name, kind: .whisper, size: size)
+            model.isDownloaded = true
+            model.localURL = dest
+            modelContext.insert(model)
+            try? modelContext.save()
+        } catch {
+            print("Failed to import model: \(error)")
+        }
     }
 
     private var generalTab: some View {

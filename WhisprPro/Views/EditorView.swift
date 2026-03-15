@@ -4,28 +4,41 @@ struct EditorView: View {
     @Bindable var segment: Segment
     let isActive: Bool
     var searchText: String = ""
+    var timestampOffset: TimeInterval = 0
+    var compactMode: Bool = false
     let onSeek: (TimeInterval) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                if let speaker = segment.speaker {
-                    SpeakerLabelView(speaker: speaker)
-                }
+            if !compactMode {
+                HStack {
+                    if let speaker = segment.speaker {
+                        SpeakerLabelView(speaker: speaker)
+                    }
 
-                Button {
-                    onSeek(segment.startTime)
-                } label: {
-                    Text(formatTimestamp(segment.startTime))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
+                    Button {
+                        onSeek(segment.startTime)
+                    } label: {
+                        Text(formatTimestamp(segment.startTime + timestampOffset))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
 
-                if segment.isEdited {
-                    Image(systemName: "pencil")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    if segment.isEdited {
+                        Image(systemName: "pencil")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button {
+                        segment.isStarred.toggle()
+                    } label: {
+                        Image(systemName: segment.isStarred ? "star.fill" : "star")
+                            .foregroundStyle(segment.isStarred ? .yellow : .secondary)
+                            .font(.caption)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
 

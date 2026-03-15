@@ -20,9 +20,12 @@ actor TranscriptionService {
         sourceURL: URL?,
         language: String,
         modelName: String,
-        duration: TimeInterval
+        duration: TimeInterval,
+        translateToEnglish: Bool = false
     ) -> Transcription {
-        Transcription(title: title, sourceURL: sourceURL, language: language, modelName: modelName, duration: duration)
+        let t = Transcription(title: title, sourceURL: sourceURL, language: language, modelName: modelName, duration: duration)
+        t.translateToEnglish = translateToEnglish
+        return t
     }
 
     func enqueue(_ transcription: Transcription) async {
@@ -100,7 +103,7 @@ actor TranscriptionService {
         let segments = try await whisperBridge.transcribe(
             audioPath: wavURL,
             language: transcription.language,
-            translate: false
+            translate: transcription.translateToEnglish
         ) { progress in
             Task { @MainActor in
                 transcription.progress = progress
@@ -108,7 +111,16 @@ actor TranscriptionService {
         }
 
         for whisperSeg in segments {
-            let segment = Segment(startTime: whisperSeg.startTime, endTime: whisperSeg.endTime, text: whisperSeg.text)
+            let text = whisperSeg.text
+            // Skip silence/noise segments
+            if text.trimmingCharacters(in: .whitespaces).isEmpty ||
+               text.contains("[SILENCE]") ||
+               text.contains("[BLANK_AUDIO]") ||
+               text.contains("(silence)") ||
+               text.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 {
+                continue
+            }
+            let segment = Segment(startTime: whisperSeg.startTime, endTime: whisperSeg.endTime, text: text)
             segment.transcription = transcription
             modelContext.insert(segment)
         }

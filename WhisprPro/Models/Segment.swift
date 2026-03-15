@@ -8,6 +8,7 @@ final class Segment {
     var endTime: TimeInterval
     var text: String
     var isEdited: Bool
+    var isStarred: Bool
     var transcription: Transcription?
     var speaker: Speaker?
 
@@ -17,5 +18,6 @@ final class Segment {
         self.endTime = endTime
         self.text = text
         self.isEdited = false
+        self.isStarred = false
     }
 }

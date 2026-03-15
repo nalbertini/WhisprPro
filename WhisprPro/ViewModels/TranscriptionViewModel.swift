@@ -20,7 +20,7 @@ final class TranscriptionViewModel {
         self.transcriptionService = TranscriptionService(modelContext: modelContext)
     }
 
-    func importFile(url: URL) async {
+    func importFile(url: URL, translateToEnglish: Bool = false) async {
         let title = url.deletingPathExtension().lastPathComponent
         let defaultLanguage = UserDefaults.standard.string(forKey: "defaultLanguage") ?? "auto"
         let defaultModel = UserDefaults.standard.string(forKey: "defaultModel") ?? "tiny"
@@ -31,7 +31,8 @@ final class TranscriptionViewModel {
                 sourceURL: url,
                 language: defaultLanguage,
                 modelName: defaultModel,
-                duration: duration
+                duration: duration,
+                translateToEnglish: translateToEnglish
             )
             selectedTranscription = transcription
             Task {

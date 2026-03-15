@@ -22,6 +22,8 @@ final class Transcription {
     var progress: Double
     var errorMessage: String?
     var diarizationError: String?
+    var translateToEnglish: Bool
+    var timestampOffset: TimeInterval
 
     @Relationship(deleteRule: .cascade, inverse: \Segment.transcription)
     var segments: [Segment]
@@ -47,5 +49,7 @@ final class Transcription {
         self.progress = 0.0
         self.segments = []
         self.speakers = []
+        self.translateToEnglish = false
+        self.timestampOffset = 0.0
     }
 }

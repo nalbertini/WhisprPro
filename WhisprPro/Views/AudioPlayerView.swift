@@ -26,7 +26,7 @@ struct AudioPlayerView: View {
                 .frame(width: 100)
 
             Menu {
-                ForEach([0.5, 0.75, 1.0, 1.25, 1.5, 2.0], id: \.self) { rate in
+                ForEach([0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0], id: \.self) { rate in
                     Button("\(rate, specifier: "%.2g")x") {
                         viewModel.setRate(Float(rate))
                     }

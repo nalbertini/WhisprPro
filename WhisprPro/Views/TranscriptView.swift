@@ -5,7 +5,7 @@ import os
 private let logger = Logger(subsystem: "com.whisprpro", category: "Export")
 
 struct TranscriptView: View {
-    let transcription: Transcription
+    @Bindable var transcription: Transcription
     @Bindable var playerViewModel: AudioPlayerViewModel
     @State private var searchText = ""
     @State private var searchResultCount = 0
@@ -30,6 +30,19 @@ struct TranscriptView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
+                if transcription.status == .completed {
+                    HStack(spacing: 4) {
+                        Text("Offset:")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("0:00", value: $transcription.timestampOffset, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 60)
+                            .font(.caption)
+                            .help("Seconds to add to all timestamps")
+                    }
+                }
+
                 HStack(spacing: 8) {
                     Menu("Export") {
                         Button("SRT (.srt)") { exportAs(.srt) }
@@ -51,6 +64,18 @@ struct TranscriptView: View {
                     }
 
                     Spacer()
+
+                    Button {
+                        copyTranscript()
+                    } label: {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Toggle("Compact", isOn: $compactMode)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
 
                     Button("Remove Fillers") {
                         removeFillerWords()
@@ -109,6 +134,8 @@ struct TranscriptView: View {
                                 segment: segment,
                                 isActive: isSegmentActive(segment),
                                 searchText: searchText,
+                                timestampOffset: transcription.timestampOffset,
+                                compactMode: compactMode,
                                 onSeek: { time in
                                     playerViewModel.seek(to: time)
                                 }
@@ -162,6 +189,19 @@ struct TranscriptView: View {
             $0.text.localizedCaseInsensitiveContains(searchText) ||
             ($0.speaker?.label.localizedCaseInsensitiveContains(searchText) ?? false)
         }
+    }
+
+    private func copyTranscript() {
+        let text = sortedSegments.map { seg in
+            var line = ""
+            if let speaker = seg.speaker {
+                line += "\(speaker.label): "
+            }
+            line += seg.text
+            return line
+        }.joined(separator: "\n")
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
     }
 
     private func removeFillerWords() {
