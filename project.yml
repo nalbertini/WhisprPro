@@ -32,6 +32,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.whisprpro.app
         PRODUCT_NAME: WhisprPro
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "WhisprPro needs microphone access to record audio for transcription."
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: "WhisprPro uses speech recognition to identify different speakers in your recordings."
         GENERATE_INFOPLIST_FILE: true
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0.0"

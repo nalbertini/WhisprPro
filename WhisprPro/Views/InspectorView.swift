@@ -7,6 +7,9 @@ struct InspectorView: View {
     @Binding var favoritesOnly: Bool
     @Binding var compactMode: Bool
 
+    @State private var isDetectingSpeakers = false
+    @State private var diarizationStatus = ""
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -141,6 +144,26 @@ struct InspectorView: View {
                             }
                         }
 
+                        // Auto-detect speakers button
+                        Button {
+                            autoDetectSpeakers()
+                        } label: {
+                            Label("Auto Detect Speakers", systemImage: "person.2.wave.2")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        .disabled(isDetectingSpeakers)
+
+                        if isDetectingSpeakers {
+                            HStack {
+                                ProgressView()
+                                    .scaleEffect(0.6)
+                                Text(diarizationStatus)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
                         // Add speaker button
                         Button {
                             addSpeaker()
@@ -250,6 +273,36 @@ struct InspectorView: View {
         // We need modelContext to insert - get it from the transcription
         if let context = transcription.modelContext {
             context.insert(speaker)
+        }
+    }
+
+    private func autoDetectSpeakers() {
+        guard let sourceURL = transcription.sourceURL else { return }
+        isDetectingSpeakers = true
+        diarizationStatus = "Starting..."
+
+        Task {
+            let service = AutoDiarizationService()
+            do {
+                let count = try await service.assignSpeakers(
+                    audioURL: sourceURL,
+                    segments: transcription.segments.sorted { $0.startTime < $1.startTime },
+                    progress: { status in
+                        Task { @MainActor in
+                            diarizationStatus = status
+                        }
+                    }
+                )
+                await MainActor.run {
+                    isDetectingSpeakers = false
+                    diarizationStatus = ""
+                }
+            } catch {
+                await MainActor.run {
+                    isDetectingSpeakers = false
+                    diarizationStatus = error.localizedDescription
+                }
+            }
         }
     }
 
