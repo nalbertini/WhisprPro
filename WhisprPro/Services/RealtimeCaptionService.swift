@@ -46,7 +46,9 @@ final class RealtimeCaptionService {
     func start(modelName: String = "tiny") async throws {
         // Load model
         let modelPath = modelManager.modelPath(name: modelName, kind: .whisper)
-        guard modelManager.isModelDownloaded(name: modelName, kind: .whisper) else {
+        let exists = modelManager.isModelDownloaded(name: modelName, kind: .whisper)
+        logger.info("Model \(modelName) path: \(modelPath.path(percentEncoded: false)), exists: \(exists)")
+        guard exists else {
             throw RealtimeCaptionError.modelNotDownloaded
         }
         try await whisperBridge.loadModel(path: modelPath)
