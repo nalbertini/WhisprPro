@@ -43,6 +43,11 @@ struct WhisprProApp: App {
                 }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
 
+                Button("YouTube Video...") {
+                    NotificationCenter.default.post(name: .showYouTube, object: nil)
+                }
+                .keyboardShortcut("y", modifiers: [.command, .shift])
+
                 Divider()
 
                 Button("Live Captions") {

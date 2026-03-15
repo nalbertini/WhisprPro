@@ -7,6 +7,7 @@ extension Notification.Name {
     static let newRecording = Notification.Name("newRecording")
     static let toggleInspector = Notification.Name("toggleInspector")
     static let showLiveCaptions = Notification.Name("showLiveCaptions")
+    static let showYouTube = Notification.Name("showYouTube")
 }
 
 struct ContentView: View {
@@ -18,6 +19,7 @@ struct ContentView: View {
     @State private var favoritesOnly = false
     @State private var compactMode = false
     @State private var showCaptions = false
+    @State private var showYouTubeImport = false
 
     var body: some View {
         Group {
@@ -125,8 +127,26 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showLiveCaptions)) { _ in
             showCaptions = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showYouTube)) { _ in
+            showYouTubeImport = true
+        }
         .sheet(isPresented: $showCaptions) {
             RealtimeCaptionView()
+        }
+        .sheet(isPresented: $showYouTubeImport) {
+            YouTubeImportView { audioURL, title, duration in
+                Task {
+                    let transcription = viewModel.transcriptionService.createTranscription(
+                        title: title,
+                        sourceURL: audioURL,
+                        language: "auto",
+                        modelName: UserDefaults.standard.string(forKey: "defaultModel") ?? "tiny",
+                        duration: duration
+                    )
+                    viewModel.selectedTranscription = transcription
+                    await viewModel.transcriptionService.enqueue(transcription)
+                }
+            }
         }
     }
 }

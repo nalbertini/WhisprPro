@@ -39,6 +39,15 @@ struct SidebarView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.plain)
+
+                Button {
+                    NotificationCenter.default.post(name: .showYouTube, object: nil)
+                } label: {
+                    Label("YouTube", systemImage: "play.rectangle")
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
             }
             .padding()
         }
