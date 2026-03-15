@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct TranscriptView: View {
     let transcription: Transcription
@@ -22,6 +23,24 @@ struct TranscriptView: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                HStack(spacing: 8) {
+                    Menu("Export") {
+                        Button("SRT (.srt)") { exportAs(.srt) }
+                        Button("VTT (.vtt)") { exportAs(.vtt) }
+                        Button("Text (.txt)") { exportAs(.txt) }
+                        Button("JSON (.json)") { exportAs(.json) }
+                        Button("PDF (.pdf)") { exportAs(.pdf) }
+                    }
+                    .fixedSize()
+
+                    ShareLink(
+                        item: transcription.title,
+                        preview: SharePreview(transcription.title)
+                    ) {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+                }
             }
             .padding()
 
@@ -151,5 +170,57 @@ struct TranscriptView: View {
         let minutes = Int(duration) / 60
         let seconds = Int(duration) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    enum ExportFormat { case srt, vtt, txt, json, pdf }
+
+    private func exportAs(_ format: ExportFormat) {
+        let segments: [ExportService.ExportSegment] = sortedSegments.map { seg in
+            (seg.startTime, seg.endTime, seg.text, seg.speaker?.label)
+        }
+
+        let panel = NSSavePanel()
+        switch format {
+        case .srt: panel.allowedContentTypes = [.init(filenameExtension: "srt")!]
+        case .vtt: panel.allowedContentTypes = [.init(filenameExtension: "vtt")!]
+        case .txt: panel.allowedContentTypes = [.plainText]
+        case .json: panel.allowedContentTypes = [.json]
+        case .pdf: panel.allowedContentTypes = [.pdf]
+        }
+        panel.nameFieldStringValue = transcription.title
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        let content: String
+        var data: Data?
+
+        switch format {
+        case .srt: content = ExportService.toSRT(segments: segments)
+        case .vtt: content = ExportService.toVTT(segments: segments)
+        case .txt: content = ExportService.toTXT(segments: segments)
+        case .json: content = ExportService.toJSON(
+            title: transcription.title,
+            language: transcription.language,
+            segments: segments
+        )
+        case .pdf:
+            data = ExportService.toPDF(
+                title: transcription.title,
+                language: transcription.language,
+                duration: transcription.duration,
+                segments: segments
+            )
+            content = ""
+        }
+
+        do {
+            if let data {
+                try data.write(to: url)
+            } else {
+                try content.write(to: url, atomically: true, encoding: .utf8)
+            }
+        } catch {
+            print("Export failed: \(error)")
+        }
     }
 }
