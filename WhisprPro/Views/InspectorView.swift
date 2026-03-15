@@ -15,11 +15,19 @@ struct InspectorView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Copy button
+                // Copy buttons
                 Button {
                     copyTranscript()
                 } label: {
                     Label("Copy Transcript", systemImage: "doc.on.doc")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    copyForAI()
+                } label: {
+                    Label("Copy for AI", systemImage: "sparkles")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -268,6 +276,34 @@ struct InspectorView: View {
             line += seg.text
             return line
         }.joined(separator: "\n")
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    private func copyForAI() {
+        let segments = transcription.segments.sorted { $0.startTime < $1.startTime }
+
+        var text = "# Transcript: \(transcription.title)\n"
+        text += "- Duration: \(formatDuration(transcription.duration))\n"
+        text += "- Language: \(languageDisplayName(transcription.language))\n"
+        text += "- Model: \(transcription.modelName)\n"
+        if !transcription.speakers.isEmpty {
+            text += "- Speakers: \(transcription.speakers.map(\.label).joined(separator: ", "))\n"
+        }
+        text += "\n---\n\n"
+
+        for seg in segments {
+            let timestamp = formatTranscribeTime(seg.startTime)
+            if let speaker = seg.speaker {
+                text += "[\(timestamp)] **\(speaker.label):** \(seg.text)\n\n"
+            } else {
+                text += "[\(timestamp)] \(seg.text)\n\n"
+            }
+        }
+
+        text += "---\n"
+        text += "Words: \(totalWords) | Characters: \(totalCharacters) | Segments: \(segments.count)\n"
+
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
     }
