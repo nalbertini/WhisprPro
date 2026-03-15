@@ -3,7 +3,7 @@ import AppKit
 
 struct RealtimeCaptionView: View {
     @State private var captionService = RealtimeCaptionService()
-    @State private var selectedModel = "tiny"
+    @State private var selectedModel = UserDefaults.standard.string(forKey: "defaultModel") ?? "base"
     @State private var selectedLanguage = "it"
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss

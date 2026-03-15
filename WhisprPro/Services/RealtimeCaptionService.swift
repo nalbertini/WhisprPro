@@ -190,6 +190,7 @@ final class RealtimeCaptionService {
             AVLinearPCMBitDepthKey: 16,
             AVLinearPCMIsFloatKey: false,
             AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsNonInterleaved: false,
         ]
 
         let file = try AVAudioFile(forWriting: url, settings: fileSettings)
