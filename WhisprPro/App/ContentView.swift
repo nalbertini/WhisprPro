@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -54,6 +55,16 @@ struct ContentView: View {
             if case .success(let urls) = result, let url = urls.first {
                 Task { await viewModel.importFile(url: url) }
             }
+        }
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            guard let provider = providers.first else { return false }
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                guard let url, AudioConverter.isSupported(url) else { return }
+                Task { @MainActor in
+                    await viewModel.importFile(url: url)
+                }
+            }
+            return true
         }
         .sheet(isPresented: Binding(
             get: { viewModel.showRecordingSheet },

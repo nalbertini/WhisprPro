@@ -54,7 +54,7 @@ actor DiarizationService {
 
         // Each point starts as its own cluster
         var clusterAssignment = Array(0..<n)
-        var nextClusterID = n
+        _ = n // nextClusterID not needed for merge-in-place approach
 
         // Merge until no pair is below threshold
         while true {
