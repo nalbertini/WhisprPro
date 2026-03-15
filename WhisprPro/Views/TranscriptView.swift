@@ -9,6 +9,7 @@ struct TranscriptView: View {
     @Bindable var playerViewModel: AudioPlayerViewModel
     @State private var searchText = ""
     @State private var searchResultCount = 0
+    @State private var compactMode = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -36,6 +37,9 @@ struct TranscriptView: View {
                         Button("Text (.txt)") { exportAs(.txt) }
                         Button("JSON (.json)") { exportAs(.json) }
                         Button("PDF (.pdf)") { exportAs(.pdf) }
+                        Button("CSV (.csv)") { exportAs(.csv) }
+                        Button("Markdown (.md)") { exportAs(.md) }
+                        Button("HTML (.html)") { exportAs(.html) }
                     }
                     .fixedSize()
 
@@ -232,7 +236,7 @@ struct TranscriptView: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
 
-    enum ExportFormat { case srt, vtt, txt, json, pdf }
+    enum ExportFormat { case srt, vtt, txt, json, pdf, csv, md, html }
 
     private func exportAs(_ format: ExportFormat) {
         let segments: [ExportService.ExportSegment] = sortedSegments.map { seg in
@@ -246,6 +250,9 @@ struct TranscriptView: View {
         case .txt: panel.allowedContentTypes = [.plainText]
         case .json: panel.allowedContentTypes = [.json]
         case .pdf: panel.allowedContentTypes = [.pdf]
+        case .csv: panel.allowedContentTypes = [.commaSeparatedText]
+        case .md: panel.allowedContentTypes = [.init(filenameExtension: "md")!]
+        case .html: panel.allowedContentTypes = [.html]
         }
         panel.nameFieldStringValue = transcription.title
 
@@ -261,6 +268,19 @@ struct TranscriptView: View {
         case .json: content = ExportService.toJSON(
             title: transcription.title,
             language: transcription.language,
+            segments: segments
+        )
+        case .csv: content = ExportService.toCSV(segments: segments)
+        case .md: content = ExportService.toMarkdown(
+            title: transcription.title,
+            language: transcription.language,
+            duration: transcription.duration,
+            segments: segments
+        )
+        case .html: content = ExportService.toHTML(
+            title: transcription.title,
+            language: transcription.language,
+            duration: transcription.duration,
             segments: segments
         )
         case .pdf:

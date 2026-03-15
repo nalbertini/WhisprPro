@@ -157,6 +157,77 @@ struct ExportService {
         return textView.dataWithPDF(inside: textView.bounds)
     }
 
+    static func toCSV(segments: [ExportSegment]) -> String {
+        var output = "Start,End,Speaker,Text\n"
+        for seg in segments {
+            let text = seg.text.replacingOccurrences(of: "\"", with: "\"\"")
+            let speaker = seg.speaker ?? ""
+            output += "\"\(simpleTimestamp(seg.start))\",\"\(simpleTimestamp(seg.end))\",\"\(speaker)\",\"\(text)\"\n"
+        }
+        return output
+    }
+
+    static func toMarkdown(
+        title: String,
+        language: String,
+        duration: TimeInterval,
+        segments: [ExportSegment]
+    ) -> String {
+        let durationStr = "\(Int(duration) / 60):\(String(format: "%02d", Int(duration) % 60))"
+        var output = "# \(title)\n\n"
+        output += "**Language:** \(language) | **Duration:** \(durationStr)\n\n---\n\n"
+        for seg in segments {
+            if let speaker = seg.speaker {
+                output += "**\(speaker)** _[\(simpleTimestamp(seg.start))]_\n\n"
+            } else {
+                output += "_[\(simpleTimestamp(seg.start))]_\n\n"
+            }
+            output += "\(seg.text)\n\n"
+        }
+        return output
+    }
+
+    static func toHTML(
+        title: String,
+        language: String,
+        duration: TimeInterval,
+        segments: [ExportSegment]
+    ) -> String {
+        let durationStr = "\(Int(duration) / 60):\(String(format: "%02d", Int(duration) % 60))"
+        var output = """
+        <!DOCTYPE html>
+        <html lang="\(language)">
+        <head>
+        <meta charset="utf-8">
+        <title>\(title)</title>
+        <style>
+        body { font-family: -apple-system, system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #333; }
+        h1 { margin-bottom: 4px; }
+        .meta { color: #888; font-size: 14px; margin-bottom: 24px; }
+        .segment { margin-bottom: 16px; }
+        .speaker { font-weight: 600; color: #007AFF; }
+        .timestamp { font-size: 12px; color: #aaa; font-variant-numeric: tabular-nums; }
+        .text { margin-top: 2px; line-height: 1.6; }
+        </style>
+        </head>
+        <body>
+        <h1>\(title)</h1>
+        <p class="meta">Language: \(language) | Duration: \(durationStr)</p>
+
+        """
+        for seg in segments {
+            output += "<div class=\"segment\">\n"
+            if let speaker = seg.speaker {
+                output += "  <span class=\"speaker\">\(speaker)</span> "
+            }
+            output += "<span class=\"timestamp\">\(simpleTimestamp(seg.start))</span>\n"
+            output += "  <p class=\"text\">\(seg.text)</p>\n"
+            output += "</div>\n"
+        }
+        output += "</body>\n</html>"
+        return output
+    }
+
     // MARK: - Helpers
 
     private static func srtTimestamp(_ time: TimeInterval) -> String {
