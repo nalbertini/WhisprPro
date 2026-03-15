@@ -3,6 +3,8 @@ import SwiftData
 
 @main
 struct WhisprProApp: App {
+    @State private var menuBarManager = MenuBarManager()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Transcription.self,
@@ -24,6 +26,9 @@ struct WhisprProApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    setupMenuBar()
+                }
         }
         .modelContainer(sharedModelContainer)
         .commands {
@@ -51,5 +56,27 @@ struct WhisprProApp: App {
             SettingsView()
         }
         .modelContainer(sharedModelContainer)
+    }
+
+    private func setupMenuBar() {
+        menuBarManager.setup()
+        let menuView = MenuBarView(
+            onImport: {
+                menuBarManager.closePopover()
+                NotificationCenter.default.post(name: .importFile, object: nil)
+                NSApp.activate(ignoringOtherApps: true)
+            },
+            onRecord: {
+                menuBarManager.closePopover()
+                NotificationCenter.default.post(name: .newRecording, object: nil)
+                NSApp.activate(ignoringOtherApps: true)
+            },
+            onOpenMain: {
+                menuBarManager.closePopover()
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        )
+        .modelContainer(sharedModelContainer)
+        menuBarManager.setContentView(menuView)
     }
 }
