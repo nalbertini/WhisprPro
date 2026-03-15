@@ -3,10 +3,23 @@ import AppKit
 
 struct RealtimeCaptionView: View {
     @State private var captionService = RealtimeCaptionService()
-    @State private var selectedModel = UserDefaults.standard.string(forKey: "defaultModel") ?? "base"
+    @State private var selectedModel = "tiny"
     @State private var selectedLanguage = "it"
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
+
+    private var downloadedModels: [(name: String, label: String)] {
+        let manager = ModelManager()
+        let all = [
+            ("tiny", "tiny (fast)"),
+            ("base", "base"),
+            ("small", "small (accurate)"),
+            ("medium", "medium"),
+            ("large-v3", "large-v3"),
+            ("large-v3-turbo", "large-v3-turbo"),
+        ]
+        return all.filter { manager.isModelDownloaded(name: $0.0, kind: .whisper) }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,12 +52,12 @@ struct RealtimeCaptionView: View {
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                         Picker("", selection: $selectedModel) {
-                            Text("tiny (fast)").tag("tiny")
-                            Text("base").tag("base")
-                            Text("small (accurate)").tag("small")
+                            ForEach(downloadedModels, id: \.name) { model in
+                                Text(model.label).tag(model.name)
+                            }
                         }
                         .pickerStyle(.menu)
-                        .frame(width: 130)
+                        .frame(width: 150)
                     }
 
                     // Language picker
@@ -79,6 +92,7 @@ struct RealtimeCaptionView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(captionService.isActive ? .red : .accentColor)
                 .controlSize(.regular)
+                .disabled(downloadedModels.isEmpty && !captionService.isActive)
             }
             .padding(16)
 
@@ -92,11 +106,19 @@ struct RealtimeCaptionView: View {
                         Image(systemName: "captions.bubble")
                             .font(.system(size: 40))
                             .foregroundStyle(.quaternary)
-                        Text("Press Start to begin live transcription")
-                            .foregroundStyle(.tertiary)
-                        Text("Tip: Set your language for better accuracy")
-                            .font(.caption)
-                            .foregroundStyle(.quaternary)
+                        if downloadedModels.isEmpty {
+                            Text("No models downloaded")
+                                .foregroundStyle(.secondary)
+                            Text("Go to Settings > Models to download one")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        } else {
+                            Text("Press Start to begin live transcription")
+                                .foregroundStyle(.tertiary)
+                            Text("Tip: Set your language for better accuracy")
+                                .font(.caption)
+                                .foregroundStyle(.quaternary)
+                        }
                     }
                 } else if captionService.segments.isEmpty && captionService.isActive {
                     VStack(spacing: 12) {
@@ -163,8 +185,13 @@ struct RealtimeCaptionView: View {
                         .font(.subheadline)
                         .foregroundStyle(.red)
                     Spacer()
-                    Button("Settings") {
-                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    Button("Open Settings") {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            if #available(macOS 14.0, *) {
+                                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                            }
+                        }
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
