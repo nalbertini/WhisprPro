@@ -5,6 +5,12 @@ options:
     macOS: "14.0"
   xcodeVersion: "16.0"
   generateEmptyDirectories: true
+  knownRegions:
+    - en
+    - it
+    - de
+    - fr
+    - es
 
 settings:
   base:
@@ -38,6 +44,7 @@ targets:
         MARKETING_VERSION: "1.0.0"
         ENABLE_HARDENED_RUNTIME: true
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_EMIT_LOC_STRINGS: true
     entitlements:
       path: WhisprPro/WhisprPro.entitlements
       properties:
