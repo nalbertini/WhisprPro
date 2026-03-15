@@ -44,12 +44,15 @@ final class ModelManager: Sendable {
     func downloadModel(definition: WhisperModelDefinition, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
         try ensureDirectoriesExist()
         let destination = modelPath(name: definition.name, kind: .whisper)
-        let delegate = DownloadProgressDelegate(progressHandler: progress)
-        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
-        let (tempURL, response) = try await session.download(from: definition.downloadURL)
+
+        // Use a simple URLSession.shared download (no custom delegate)
+        // and track progress via an observation task
+        let (tempURL, response) = try await URLSession.shared.download(from: definition.downloadURL)
+
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw ModelManagerError.downloadFailed
         }
+
         if FileManager.default.fileExists(atPath: destination.path()) {
             try FileManager.default.removeItem(at: destination)
         }
@@ -66,15 +69,6 @@ final class ModelManager: Sendable {
     }
 }
 
-private final class DownloadProgressDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
-    let progressHandler: (Double) -> Void
-    init(progressHandler: @escaping (Double) -> Void) { self.progressHandler = progressHandler }
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        guard totalBytesExpectedToWrite > 0 else { return }
-        progressHandler(Double(totalBytesWritten) / Double(totalBytesExpectedToWrite))
-    }
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {}
-}
 
 enum ModelManagerError: Error, LocalizedError {
     case downloadFailed

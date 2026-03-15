@@ -21,7 +21,7 @@ struct ModelManagerView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                         Button("Delete", role: .destructive) {
-                            Task { await viewModel.deleteModel(model) }
+                            viewModel.deleteModel(model)
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(.red)
