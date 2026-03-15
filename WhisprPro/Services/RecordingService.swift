@@ -41,8 +41,8 @@ final class RecordingService {
         let inputNode = engine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
 
-        // Target format: 16kHz mono PCM (what whisper.cpp expects)
-        guard let outputFormat = AVAudioFormat(
+        // Target format: 16kHz mono PCM float32 for processing
+        guard let processingFormat = AVAudioFormat(
             commonFormat: .pcmFormatFloat32,
             sampleRate: 16000,
             channels: 1,
@@ -52,7 +52,7 @@ final class RecordingService {
         }
 
         // Create converter from mic format to 16kHz mono
-        guard let audioConverter = AVAudioConverter(from: inputFormat, to: outputFormat) else {
+        guard let audioConverter = AVAudioConverter(from: inputFormat, to: processingFormat) else {
             throw RecordingError.deviceNotAvailable
         }
         self.converter = audioConverter
@@ -61,7 +61,16 @@ final class RecordingService {
         let tempFile = tempDir.appendingPathComponent("\(UUID().uuidString).wav")
         tempFileURL = tempFile
 
-        let audioFile = try AVAudioFile(forWriting: tempFile, settings: outputFormat.settings)
+        // File format: 16-bit int PCM (what whisper.cpp's WAV loader expects)
+        let fileSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVSampleRateKey: 16000.0,
+            AVNumberOfChannelsKey: 1,
+            AVLinearPCMBitDepthKey: 16,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsBigEndianKey: false,
+        ]
+        let audioFile = try AVAudioFile(forWriting: tempFile, settings: fileSettings)
         self.audioFile = audioFile
 
         inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
@@ -79,10 +88,10 @@ final class RecordingService {
 
             // Convert to 16kHz mono and write
             let frameCapacity = AVAudioFrameCount(
-                Double(buffer.frameLength) * outputFormat.sampleRate / inputFormat.sampleRate
+                Double(buffer.frameLength) * processingFormat.sampleRate / inputFormat.sampleRate
             )
             guard frameCapacity > 0,
-                  let convertedBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: frameCapacity) else {
+                  let convertedBuffer = AVAudioPCMBuffer(pcmFormat: processingFormat, frameCapacity: frameCapacity) else {
                 return
             }
 
