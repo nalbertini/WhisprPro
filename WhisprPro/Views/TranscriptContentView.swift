@@ -33,6 +33,8 @@ struct TranscriptContentView: View {
                 Spacer()
 
                 Menu("Export") {
+                    Button("WhisprPro (.whispr)") { exportAsWhispr() }
+                    Divider()
                     Button("SRT (.srt)") { exportAs(.srt) }
                     Button("VTT (.vtt)") { exportAs(.vtt) }
                     Button("Text (.txt)") { exportAs(.txt) }
@@ -283,6 +285,20 @@ struct TranscriptContentView: View {
     }
 
     // MARK: - Export
+
+    private func exportAsWhispr() {
+        do {
+            let whisprURL = try WhisprFileService.exportWhispr(transcription: transcription)
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.init(filenameExtension: "whispr")!]
+            panel.nameFieldStringValue = transcription.title
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            try? FileManager.default.removeItem(at: url)
+            try FileManager.default.copyItem(at: whisprURL, to: url)
+        } catch {
+            logger.error("Export .whispr failed: \(error)")
+        }
+    }
 
     enum ExportFormat { case srt, vtt, txt, json, pdf, csv, md, html, docx }
 

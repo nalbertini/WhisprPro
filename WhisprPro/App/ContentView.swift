@@ -110,12 +110,18 @@ struct ContentView: View {
                 get: { viewModel.showFileImporter },
                 set: { viewModel.showFileImporter = $0 }
             ),
-            allowedContentTypes: [.audio, .movie],
+            allowedContentTypes: [.audio, .movie, .init(filenameExtension: "whispr")!],
             allowsMultipleSelection: true
         ) { result in
             if case .success(let urls) = result {
                 Task {
-                    await viewModel.importFiles(urls: urls)
+                    for url in urls {
+                        if url.pathExtension == "whispr" {
+                            viewModel.importWhisprFile(url: url)
+                        } else {
+                            await viewModel.importFile(url: url)
+                        }
+                    }
                 }
             }
         }
