@@ -9,6 +9,7 @@ struct InspectorView: View {
 
     @State private var isDetectingSpeakers = false
     @State private var diarizationStatus = ""
+    @State private var expectedSpeakers = 2
 
     var body: some View {
         ScrollView {
@@ -144,7 +145,12 @@ struct InspectorView: View {
                             }
                         }
 
-                        // Auto-detect speakers button
+                        // Auto-detect speakers
+                        HStack {
+                            Stepper("Speakers: \(expectedSpeakers)", value: $expectedSpeakers, in: 2...8)
+                                .font(.caption)
+                        }
+
                         Button {
                             autoDetectSpeakers()
                         } label: {
@@ -287,6 +293,7 @@ struct InspectorView: View {
                 let count = try await service.assignSpeakers(
                     audioURL: sourceURL,
                     segments: transcription.segments.sorted { $0.startTime < $1.startTime },
+                    numSpeakers: expectedSpeakers,
                     progress: { status in
                         Task { @MainActor in
                             diarizationStatus = status

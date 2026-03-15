@@ -11,16 +11,17 @@ actor AutoDiarizationService {
     func assignSpeakers(
         audioURL: URL,
         segments: [Segment],
+        numSpeakers: Int = 2,
         progress: @escaping @Sendable (String) -> Void
     ) async throws -> Int {
         guard !segments.isEmpty else { return 0 }
 
-        logger.info("Starting auto-diarization for \(segments.count) segments")
+        logger.info("Starting auto-diarization for \(segments.count) segments, expecting \(numSpeakers) speakers")
 
         // Try pyannote subprocess first
         do {
             progress("Running pyannote speaker detection...")
-            let count = try await assignSpeakersViaPyannote(audioURL: audioURL, segments: segments, progress: progress)
+            let count = try await assignSpeakersViaPyannote(audioURL: audioURL, segments: segments, numSpeakers: numSpeakers, progress: progress)
             return count
         } catch {
             logger.info("Pyannote not available (\(error.localizedDescription)), falling back to audio analysis")
@@ -28,7 +29,7 @@ actor AutoDiarizationService {
         }
 
         // Fall back to audio-based analysis
-        return try await assignSpeakersViaAudioAnalysis(audioURL: audioURL, segments: segments, progress: progress)
+        return try await assignSpeakersViaAudioAnalysis(audioURL: audioURL, segments: segments, numSpeakers: numSpeakers, progress: progress)
     }
 
     // MARK: - Pyannote (Python subprocess)
@@ -36,6 +37,7 @@ actor AutoDiarizationService {
     private func assignSpeakersViaPyannote(
         audioURL: URL,
         segments: [Segment],
+        numSpeakers: Int,
         progress: @escaping @Sendable (String) -> Void
     ) async throws -> Int {
         // Find diarize.py script
@@ -87,7 +89,7 @@ actor AutoDiarizationService {
                 do {
                     let proc = Process()
                     proc.executableURL = URL(fileURLWithPath: python)
-                    proc.arguments = [script, audioPath]
+                    proc.arguments = [script, audioPath, "--num-speakers", "\(numSpeakers)"]
 
                     var env = ProcessInfo.processInfo.environment
                     env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
@@ -201,6 +203,7 @@ actor AutoDiarizationService {
     private func assignSpeakersViaAudioAnalysis(
         audioURL: URL,
         segments: [Segment],
+        numSpeakers: Int = 2,
         progress: @escaping @Sendable (String) -> Void
     ) async throws -> Int {
         progress("Loading audio...")
@@ -296,8 +299,8 @@ actor AutoDiarizationService {
             ])
         }
 
-        // K-means clustering with k=2
-        let assignments = kMeansClustering(vectors: featureVectors, k: 2)
+        // K-means clustering
+        let assignments = kMeansClustering(vectors: featureVectors, k: numSpeakers)
 
         // Create speakers and assign
         let speakerColors = ["#007AFF", "#FF9500", "#34C759", "#FF3B30"]

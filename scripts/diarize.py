@@ -122,8 +122,8 @@ def main():
             if args.num_speakers > 0:
                 labels = fcluster(Z, t=args.num_speakers, criterion="maxclust")
             else:
-                # Use distance threshold
-                labels = fcluster(Z, t=0.5, criterion="distance")
+                # Use higher distance threshold to avoid over-segmentation
+                labels = fcluster(Z, t=0.75, criterion="distance")
 
             labels = labels - 1  # 0-indexed
 
