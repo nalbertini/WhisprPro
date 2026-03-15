@@ -87,10 +87,12 @@ struct ContentView: View {
                 set: { viewModel.showFileImporter = $0 }
             ),
             allowedContentTypes: [.audio, .movie],
-            allowsMultipleSelection: false
+            allowsMultipleSelection: true
         ) { result in
-            if case .success(let urls) = result, let url = urls.first {
-                Task { await viewModel.importFile(url: url) }
+            if case .success(let urls) = result {
+                Task {
+                    await viewModel.importFiles(urls: urls)
+                }
             }
         }
         .sheet(isPresented: Binding(
