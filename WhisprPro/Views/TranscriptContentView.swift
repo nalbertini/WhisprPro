@@ -4,7 +4,7 @@ import os
 
 private let logger = Logger(subsystem: "com.whisprpro", category: "Export")
 
-struct TranscriptView: View {
+struct TranscriptContentView: View {
     @Bindable var transcription: Transcription
     @Bindable var playerViewModel: AudioPlayerViewModel
     @State private var searchText = ""
@@ -12,79 +12,46 @@ struct TranscriptView: View {
     @State private var compactMode = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Header
-            VStack(alignment: .leading, spacing: 4) {
-                Text(transcription.title)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                HStack(spacing: 12) {
-                    Label(formatDuration(transcription.duration), systemImage: "clock")
-                    Label(transcription.language, systemImage: "globe")
-                    Label(transcription.modelName, systemImage: "cpu")
-                    if !transcription.speakers.isEmpty {
-                        Label("\(transcription.speakers.count) speakers", systemImage: "person.2")
+        VStack(spacing: 0) {
+            // Header bar
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(transcription.title)
+                        .font(.headline)
+                    HStack(spacing: 8) {
+                        Label(formatDuration(transcription.duration), systemImage: "clock")
+                        Label(transcription.language, systemImage: "globe")
+                        Label(transcription.modelName, systemImage: "cpu")
                     }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-                if transcription.status == .completed {
-                    HStack(spacing: 4) {
-                        Text("Offset:")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        TextField("0:00", value: $transcription.timestampOffset, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                            .font(.caption)
-                            .help("Seconds to add to all timestamps")
-                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
 
-                HStack(spacing: 8) {
-                    Menu("Export") {
-                        Button("SRT (.srt)") { exportAs(.srt) }
-                        Button("VTT (.vtt)") { exportAs(.vtt) }
-                        Button("Text (.txt)") { exportAs(.txt) }
-                        Button("JSON (.json)") { exportAs(.json) }
-                        Button("PDF (.pdf)") { exportAs(.pdf) }
-                        Button("CSV (.csv)") { exportAs(.csv) }
-                        Button("Markdown (.md)") { exportAs(.md) }
-                        Button("HTML (.html)") { exportAs(.html) }
-                    }
-                    .fixedSize()
+                Spacer()
 
-                    ShareLink(
-                        item: transcription.title,
-                        preview: SharePreview(transcription.title)
-                    ) {
-                        Label("Share", systemImage: "square.and.arrow.up")
-                    }
+                Menu("Export") {
+                    Button("SRT (.srt)") { exportAs(.srt) }
+                    Button("VTT (.vtt)") { exportAs(.vtt) }
+                    Button("Text (.txt)") { exportAs(.txt) }
+                    Button("JSON (.json)") { exportAs(.json) }
+                    Button("PDF (.pdf)") { exportAs(.pdf) }
+                    Button("CSV (.csv)") { exportAs(.csv) }
+                    Button("Markdown (.md)") { exportAs(.md) }
+                    Button("HTML (.html)") { exportAs(.html) }
+                }
+                .fixedSize()
 
-                    Spacer()
-
-                    Button {
-                        copyTranscript()
-                    } label: {
-                        Label("Copy", systemImage: "doc.on.doc")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Toggle("Compact", isOn: $compactMode)
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-
-                    Button("Remove Fillers") {
-                        removeFillerWords()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                ShareLink(
+                    item: transcription.title,
+                    preview: SharePreview(transcription.title)
+                ) {
+                    Label("Share", systemImage: "square.and.arrow.up")
                 }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.vertical, 10)
+
+            Divider()
 
             // Search bar
             if transcription.status == .completed {
@@ -109,23 +76,11 @@ struct TranscriptView: View {
                 .padding(.horizontal)
                 .padding(.vertical, 6)
                 .background(.bar)
-            }
-
-            Divider()
-
-            // Audio player
-            if let sourceURL = transcription.sourceURL {
-                AudioPlayerView(viewModel: playerViewModel)
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                    .onAppear {
-                        playerViewModel.loadAudio(url: sourceURL)
-                    }
 
                 Divider()
             }
 
-            // Segments
+            // Transcript content
             if transcription.status == .completed {
                 ScrollViewReader { proxy in
                     List {
@@ -154,13 +109,13 @@ struct TranscriptView: View {
             } else if transcription.status == .transcribing || transcription.status == .diarizing {
                 VStack(spacing: 12) {
                     ProgressView(value: transcription.progress)
+                        .frame(width: 200)
                     Text(transcription.status == .transcribing ? "Transcribing..." : "Identifying speakers...")
                         .foregroundStyle(.secondary)
                     Text("\(Int(transcription.progress * 100))%")
                         .font(.title2)
                         .monospacedDigit()
                 }
-                .padding(40)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if transcription.status == .failed {
                 VStack(spacing: 8) {
@@ -175,6 +130,17 @@ struct TranscriptView: View {
                 Text("Waiting...")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+
+            // Player fixed at bottom
+            if transcription.sourceURL != nil {
+                Divider()
+                AudioPlayerView(viewModel: playerViewModel)
+                    .onAppear {
+                        if let url = transcription.sourceURL {
+                            playerViewModel.loadAudio(url: url)
+                        }
+                    }
             }
         }
     }
@@ -191,32 +157,15 @@ struct TranscriptView: View {
         }
     }
 
-    private func copyTranscript() {
-        let text = sortedSegments.map { seg in
-            var line = ""
-            if let speaker = seg.speaker {
-                line += "\(speaker.label): "
-            }
-            line += seg.text
-            return line
-        }.joined(separator: "\n")
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
-    }
-
-    private func removeFillerWords() {
-        for segment in sortedSegments {
-            let cleaned = FillerWordService.removeFillersFrom(segment.text)
-            if cleaned != segment.text {
-                segment.text = cleaned
-                segment.isEdited = true
-            }
-        }
-    }
-
     private func isSegmentActive(_ segment: Segment) -> Bool {
         playerViewModel.currentTime >= segment.startTime &&
         playerViewModel.currentTime < segment.endTime
+    }
+
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 
     @ViewBuilder
@@ -245,22 +194,18 @@ struct TranscriptView: View {
     private func splitSegment(_ segment: Segment) {
         let text = segment.text
         let midIndex = text.index(text.startIndex, offsetBy: text.count / 2)
-        // Find nearest space to split cleanly
         let splitIndex = text[..<midIndex].lastIndex(of: " ") ?? midIndex
 
         let firstText = String(text[..<splitIndex])
         let secondText = String(text[splitIndex...]).trimmingCharacters(in: .whitespaces)
 
-        // Interpolate timestamp linearly
         let ratio = Double(text.distance(from: text.startIndex, to: splitIndex)) / Double(text.count)
         let splitTime = segment.startTime + (segment.endTime - segment.startTime) * ratio
 
-        // Update existing segment
         segment.text = firstText
         segment.endTime = splitTime
         segment.isEdited = true
 
-        // Create new segment
         let newSegment = Segment(startTime: splitTime, endTime: segment.endTime, text: secondText)
         newSegment.speaker = segment.speaker
         newSegment.transcription = segment.transcription
@@ -270,11 +215,7 @@ struct TranscriptView: View {
         }
     }
 
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
+    // MARK: - Export
 
     enum ExportFormat { case srt, vtt, txt, json, pdf, csv, md, html }
 

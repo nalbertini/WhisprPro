@@ -4,10 +4,10 @@ struct AudioPlayerView: View {
     @Bindable var viewModel: AudioPlayerViewModel
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             Button(action: viewModel.togglePlayback) {
                 Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.title2)
+                    .font(.title3)
             }
             .buttonStyle(.plain)
 
@@ -20,10 +20,9 @@ struct AudioPlayerView: View {
             )
 
             Text("\(formatTime(viewModel.currentTime)) / \(formatTime(viewModel.duration))")
-                .font(.caption)
+                .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(.secondary)
-                .monospacedDigit()
-                .frame(width: 100)
+                .frame(width: 110)
 
             Menu {
                 ForEach([0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0], id: \.self) { rate in
@@ -33,23 +32,23 @@ struct AudioPlayerView: View {
                 }
             } label: {
                 Text("\(viewModel.playbackRate, specifier: "%.2g")x")
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .font(.system(size: 12))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
                     .background(.quaternary)
                     .cornerRadius(4)
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .background(.bar)
-        .cornerRadius(8)
     }
 
     private func formatTime(_ time: TimeInterval) -> String {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
