@@ -11,6 +11,7 @@ struct InspectorView: View {
     @State private var isDetectingSpeakers = false
     @State private var diarizationStatus = ""
     @State private var expectedSpeakers = 2
+    @State private var showAIActions = false
 
     var body: some View {
         ScrollView {
@@ -201,6 +202,15 @@ struct InspectorView: View {
                             .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
 
+                        Button {
+                            showAIActions = true
+                        } label: {
+                            Label("AI Assistant", systemImage: "sparkles")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.purple)
+                        .controlSize(.small)
+
                         Button("Remove Fillers") {
                             removeFillerWords()
                         }
@@ -224,6 +234,9 @@ struct InspectorView: View {
             .padding()
         }
         .background(.bar)
+        .sheet(isPresented: $showAIActions) {
+            AIActionView(transcription: transcription)
+        }
     }
 
     // MARK: - Computed

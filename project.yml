@@ -33,7 +33,9 @@ targets:
           - "**/.DS_Store"
     dependencies:
       - package: WhisperCpp
-      - target: WhisprProShareExtension
+      # Share extension disabled temporarily - bundle ID prefix issue
+      # - target: WhisprProShareExtension
+      #   embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.whisprpro.app
@@ -48,18 +50,6 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: true
     entitlements:
       path: WhisprPro/WhisprPro.entitlements
-      properties:
-        com.apple.security.device.audio-input: true
-        com.apple.security.network.client: true
-        com.apple.security.files.user-selected.read-write: true
-        com.apple.security.application-groups:
-          - group.com.whisprpro
-    info:
-      properties:
-        CFBundleURLTypes:
-          - CFBundleURLName: WhisprPro
-            CFBundleURLSchemes:
-              - whisprpro
 
   WhisprProShareExtension:
     type: app-extension
@@ -75,10 +65,6 @@ targets:
         ENABLE_HARDENED_RUNTIME: true
     entitlements:
       path: WhisprProShareExtension/WhisprProShare.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.whisprpro
-        com.apple.security.files.user-selected.read-only: true
 
   WhisprProTests:
     type: bundle.unit-test
