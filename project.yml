@@ -33,6 +33,7 @@ targets:
           - "**/.DS_Store"
     dependencies:
       - package: WhisperCpp
+      - target: WhisprProShareExtension
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.whisprpro.app
@@ -51,6 +52,33 @@ targets:
         com.apple.security.device.audio-input: true
         com.apple.security.network.client: true
         com.apple.security.files.user-selected.read-write: true
+        com.apple.security.application-groups:
+          - group.com.whisprpro
+    info:
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: WhisprPro
+            CFBundleURLSchemes:
+              - whisprpro
+
+  WhisprProShareExtension:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: WhisprProShareExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.whisprpro.app.share
+        PRODUCT_NAME: WhisprProShare
+        GENERATE_INFOPLIST_FILE: false
+        INFOPLIST_FILE: WhisprProShareExtension/Info.plist
+        ENABLE_HARDENED_RUNTIME: true
+    entitlements:
+      path: WhisprProShareExtension/WhisprProShare.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.whisprpro
+        com.apple.security.files.user-selected.read-only: true
 
   WhisprProTests:
     type: bundle.unit-test
@@ -71,6 +99,7 @@ schemes:
     build:
       targets:
         WhisprPro: all
+        WhisprProShareExtension: all
         WhisprProTests: [test]
     run:
       config: Debug

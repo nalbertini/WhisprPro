@@ -29,6 +29,9 @@ struct WhisprProApp: App {
                 .onAppear {
                     setupMenuBar()
                 }
+                .onOpenURL { url in
+                    handleIncomingURL(url)
+                }
         }
         .modelContainer(sharedModelContainer)
         .commands {
@@ -90,5 +93,28 @@ struct WhisprProApp: App {
         )
         .modelContainer(sharedModelContainer)
         menuBarManager.setContentView(menuView)
+    }
+
+    private func handleIncomingURL(_ url: URL) {
+        guard url.scheme == "whisprpro" else { return }
+
+        if url.host == "import", let fileParam = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?.first(where: { $0.name == "file" })?.value,
+           let fileURL = URL(string: fileParam) {
+            // Import the file via notification
+            NotificationCenter.default.post(name: .importFile, object: fileURL)
+        }
+
+        // Also check App Group shared folder for pending imports
+        if let sharedDir = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.whisprpro"
+        )?.appendingPathComponent("SharedFiles") {
+            let markerURL = sharedDir.appendingPathComponent(".pending-import")
+            if let path = try? String(contentsOf: markerURL, encoding: .utf8) {
+                let fileURL = URL(filePath: path.trimmingCharacters(in: .whitespacesAndNewlines))
+                NotificationCenter.default.post(name: .importFile, object: fileURL)
+                try? FileManager.default.removeItem(at: markerURL)
+            }
+        }
     }
 }
