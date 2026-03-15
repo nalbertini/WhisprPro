@@ -45,18 +45,13 @@ final class ModelManager: Sendable {
         try ensureDirectoriesExist()
         let destination = modelPath(name: definition.name, kind: .whisper)
 
-        // Use a simple URLSession.shared download (no custom delegate)
-        // and track progress via an observation task
-        let (tempURL, response) = try await URLSession.shared.download(from: definition.downloadURL)
-
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            throw ModelManagerError.downloadFailed
-        }
+        let delegate = DownloadDelegate(progressHandler: progress)
+        let (fileURL, _) = try await delegate.download(from: definition.downloadURL)
 
         if FileManager.default.fileExists(atPath: destination.path()) {
             try FileManager.default.removeItem(at: destination)
         }
-        try FileManager.default.moveItem(at: tempURL, to: destination)
+        try FileManager.default.moveItem(at: fileURL, to: destination)
         progress(1.0)
         return destination
     }
@@ -69,6 +64,57 @@ final class ModelManager: Sendable {
     }
 }
 
+
+private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+    let progressHandler: (Double) -> Void
+    private var continuation: CheckedContinuation<(URL, URLResponse), Error>?
+    private var tempFileURL: URL?
+
+    init(progressHandler: @escaping (Double) -> Void) {
+        self.progressHandler = progressHandler
+    }
+
+    func download(from url: URL) async throws -> (URL, URLResponse) {
+        try await withCheckedThrowingContinuation { continuation in
+            self.continuation = continuation
+            let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+            session.downloadTask(with: url).resume()
+        }
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
+                    didWriteData bytesWritten: Int64, totalBytesWritten: Int64,
+                    totalBytesExpectedToWrite: Int64) {
+        guard totalBytesExpectedToWrite > 0 else { return }
+        let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+        progressHandler(progress)
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
+                    didFinishDownloadingTo location: URL) {
+        // Move to a temp location that won't be deleted when this method returns
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempFile = tempDir.appendingPathComponent(UUID().uuidString + ".bin")
+        do {
+            try FileManager.default.moveItem(at: location, to: tempFile)
+            tempFileURL = tempFile
+        } catch {
+            continuation?.resume(throwing: error)
+            continuation = nil
+        }
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        if let error {
+            continuation?.resume(throwing: error)
+        } else if let tempFileURL, let response = task.response {
+            continuation?.resume(returning: (tempFileURL, response))
+        } else {
+            continuation?.resume(throwing: ModelManagerError.downloadFailed)
+        }
+        continuation = nil
+    }
+}
 
 enum ModelManagerError: Error, LocalizedError {
     case downloadFailed
