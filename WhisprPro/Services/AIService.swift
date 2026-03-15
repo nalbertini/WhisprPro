@@ -84,20 +84,14 @@ actor AIService {
         prompt: String,
         progress: @escaping @Sendable (String) -> Void
     ) async throws -> String {
-        // Write prompt to temp file (too long for command line args)
-        let tempPromptFile = FileManager.default.temporaryDirectory
-            .appendingPathComponent("whisprpro-ai-\(UUID().uuidString).txt")
-        try prompt.write(to: tempPromptFile, atomically: true, encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: tempPromptFile) }
-
         let result: (exitCode: Int32, stdout: String, stderr: String) = try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let proc = Process()
                     proc.executableURL = URL(fileURLWithPath: path)
                     proc.arguments = [
-                        "--print",  // Non-interactive, print response
-                        "--stdin",  // Read from stdin
+                        "-p",  // Non-interactive, print response
+                        prompt
                     ]
 
                     var env = ProcessInfo.processInfo.environment
@@ -106,10 +100,8 @@ actor AIService {
 
                     let outPipe = Pipe()
                     let errPipe = Pipe()
-                    let inPipe = Pipe()
                     proc.standardOutput = outPipe
                     proc.standardError = errPipe
-                    proc.standardInput = inPipe
 
                     var stdoutData = Data()
                     var stderrData = Data()
@@ -136,12 +128,6 @@ actor AIService {
                     }
 
                     try proc.run()
-
-                    // Write prompt to stdin
-                    let promptData = prompt.data(using: .utf8) ?? Data()
-                    inPipe.fileHandleForWriting.write(promptData)
-                    inPipe.fileHandleForWriting.closeFile()
-
                 } catch {
                     continuation.resume(throwing: error)
                 }
