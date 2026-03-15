@@ -55,13 +55,31 @@ actor TranscriptionService {
         try? modelContext.save()
 
         let tempDir = FileManager.default.temporaryDirectory
-        let wavURL = tempDir.appendingPathComponent("\(transcription.id.uuidString).wav")
+        let wavURL: URL
 
-        if let sourceURL = transcription.sourceURL {
-            try await AudioConverter.convertToWAV(input: sourceURL, output: wavURL)
+        guard let sourceURL = transcription.sourceURL else {
+            throw AudioConverterError.fileNotFound
+        }
+
+        // Start accessing security-scoped resource if needed
+        let accessing = sourceURL.startAccessingSecurityScopedResource()
+        defer { if accessing { sourceURL.stopAccessingSecurityScopedResource() } }
+
+        print("[Transcription] Source: \(sourceURL.path()), exists: \(FileManager.default.fileExists(atPath: sourceURL.path()))")
+
+        if sourceURL.pathExtension.lowercased() == "wav" {
+            // Recording output is already WAV — use directly or copy to temp
+            let tempFile = tempDir.appendingPathComponent("\(transcription.id.uuidString).wav")
+            try FileManager.default.copyItem(at: sourceURL, to: tempFile)
+            wavURL = tempFile
+        } else {
+            let tempFile = tempDir.appendingPathComponent("\(transcription.id.uuidString).wav")
+            try await AudioConverter.convertToWAV(input: sourceURL, output: tempFile)
+            wavURL = tempFile
         }
 
         let modelPath = modelManager.modelPath(name: transcription.modelName, kind: .whisper)
+        print("[Transcription] Model path: \(modelPath.path()), exists: \(FileManager.default.fileExists(atPath: modelPath.path()))")
         try await whisperBridge.loadModel(path: modelPath)
 
         let segments = try await whisperBridge.transcribe(
