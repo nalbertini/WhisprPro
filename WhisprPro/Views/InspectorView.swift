@@ -121,19 +121,19 @@ struct InspectorView: View {
                                 .foregroundStyle(.tertiary)
                         } else {
                             ForEach(transcription.speakers) { speaker in
-                                HStack {
+                                HStack(spacing: 10) {
                                     ColorPicker("", selection: Binding(
                                         get: { Color(hex: speaker.color) ?? .blue },
                                         set: { speaker.color = $0.hexString }
                                     ))
                                     .labelsHidden()
-                                    .frame(width: 24)
+                                    .frame(width: 20, height: 20)
 
                                     TextField("Speaker", text: Binding(
                                         get: { speaker.label },
                                         set: { speaker.label = $0 }
                                     ))
-                                    .textFieldStyle(.plain)
+                                    .textFieldStyle(.roundedBorder)
                                     .font(.body)
 
                                     Spacer()
@@ -141,7 +141,9 @@ struct InspectorView: View {
                                     Text("\(speaker.segments.count)")
                                         .font(.caption)
                                         .foregroundStyle(.tertiary)
+                                        .frame(width: 20, alignment: .trailing)
                                 }
+                                .padding(.vertical, 2)
                             }
                         }
 
