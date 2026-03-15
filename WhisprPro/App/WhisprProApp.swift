@@ -26,6 +26,26 @@ struct WhisprProApp: App {
             ContentView()
         }
         .modelContainer(sharedModelContainer)
+        .commands {
+            CommandMenu("Transcription") {
+                Button("Import File...") {
+                    NotificationCenter.default.post(name: .importFile, object: nil)
+                }
+                .keyboardShortcut("i", modifiers: .command)
+
+                Button("New Recording") {
+                    NotificationCenter.default.post(name: .newRecording, object: nil)
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+
+                Divider()
+
+                Button("Toggle Inspector") {
+                    NotificationCenter.default.post(name: .toggleInspector, object: nil)
+                }
+                .keyboardShortcut("i", modifiers: [.command, .option])
+            }
+        }
 
         Settings {
             SettingsView()

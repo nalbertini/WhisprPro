@@ -6,6 +6,7 @@ struct EditorView: View {
     var searchText: String = ""
     var timestampOffset: TimeInterval = 0
     var compactMode: Bool = false
+    var fontSize: Double = 15
     let onSeek: (TimeInterval) -> Void
 
     var body: some View {
@@ -45,13 +46,13 @@ struct EditorView: View {
             if searchText.isEmpty {
                 TextField("", text: $segment.text, axis: .vertical)
                     .textFieldStyle(.plain)
-                    .font(.body)
+                    .font(.system(size: fontSize))
                     .onChange(of: segment.text) {
                         segment.isEdited = true
                     }
             } else {
                 highlightedText(segment.text, highlight: searchText)
-                    .font(.body)
+                    .font(.system(size: fontSize))
             }
         }
         .padding(.horizontal, 12)
@@ -129,6 +130,15 @@ struct SpeakerLabelView: View {
 }
 
 extension Color {
+    var hexString: String {
+        let nsColor = NSColor(self)
+        guard let rgb = nsColor.usingColorSpace(.sRGB) else { return "#007AFF" }
+        let r = Int(rgb.redComponent * 255)
+        let g = Int(rgb.greenComponent * 255)
+        let b = Int(rgb.blueComponent * 255)
+        return String(format: "#%02X%02X%02X", r, g, b)
+    }
+
     init?(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")

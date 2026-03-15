@@ -2,11 +2,20 @@ import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
+extension Notification.Name {
+    static let importFile = Notification.Name("importFile")
+    static let newRecording = Notification.Name("newRecording")
+    static let toggleInspector = Notification.Name("toggleInspector")
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: TranscriptionViewModel?
     @State private var playerViewModel = AudioPlayerViewModel()
     @State private var showInspector = true
+    @State private var fontSize: Double = 15
+    @State private var favoritesOnly = false
+    @State private var compactMode = false
 
     var body: some View {
         Group {
@@ -33,12 +42,20 @@ struct ContentView: View {
                 HSplitView {
                     TranscriptContentView(
                         transcription: transcription,
-                        playerViewModel: playerViewModel
+                        playerViewModel: playerViewModel,
+                        fontSize: fontSize,
+                        favoritesOnly: favoritesOnly,
+                        compactMode: compactMode
                     )
 
                     if showInspector {
-                        InspectorView(transcription: transcription)
-                            .frame(width: 240)
+                        InspectorView(
+                            transcription: transcription,
+                            fontSize: $fontSize,
+                            favoritesOnly: $favoritesOnly,
+                            compactMode: $compactMode
+                        )
+                        .frame(width: 240)
                     }
                 }
             } else {
@@ -91,6 +108,15 @@ struct ContentView: View {
                 }
             }
             return true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .importFile)) { _ in
+            viewModel.showFileImporter = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .newRecording)) { _ in
+            viewModel.showRecordingSheet = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleInspector)) { _ in
+            withAnimation { showInspector.toggle() }
         }
     }
 }

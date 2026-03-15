@@ -3,9 +3,9 @@ import AppKit
 
 struct InspectorView: View {
     @Bindable var transcription: Transcription
-    @State private var fontSize: Double = 15
-    @State private var favoritesOnly = false
-    @State private var compactMode = false
+    @Binding var fontSize: Double
+    @Binding var favoritesOnly: Bool
+    @Binding var compactMode: Bool
 
     var body: some View {
         ScrollView {
@@ -61,12 +61,27 @@ struct InspectorView: View {
                         } else {
                             ForEach(transcription.speakers) { speaker in
                                 HStack {
-                                    Circle()
-                                        .fill(Color(hex: speaker.color) ?? .blue)
-                                        .frame(width: 10, height: 10)
-                                    Text(speaker.label)
-                                        .font(.body)
+                                    ColorPicker("", selection: Binding(
+                                        get: { Color(hex: speaker.color) ?? .blue },
+                                        set: { newColor in
+                                            speaker.color = newColor.hexString
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                    .frame(width: 24)
+
+                                    TextField("Speaker", text: Binding(
+                                        get: { speaker.label },
+                                        set: { speaker.label = $0 }
+                                    ))
+                                    .textFieldStyle(.plain)
+                                    .font(.body)
+
                                     Spacer()
+
+                                    Text("\(speaker.segments.count)")
+                                        .font(.caption)
+                                        .foregroundStyle(.tertiary)
                                 }
                             }
                         }

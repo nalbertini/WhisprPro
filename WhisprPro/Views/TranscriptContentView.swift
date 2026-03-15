@@ -7,9 +7,11 @@ private let logger = Logger(subsystem: "com.whisprpro", category: "Export")
 struct TranscriptContentView: View {
     @Bindable var transcription: Transcription
     @Bindable var playerViewModel: AudioPlayerViewModel
+    var fontSize: Double = 15
+    var favoritesOnly: Bool = false
+    var compactMode: Bool = false
     @State private var searchText = ""
     @State private var searchResultCount = 0
-    @State private var compactMode = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -91,6 +93,7 @@ struct TranscriptContentView: View {
                                 searchText: searchText,
                                 timestampOffset: transcription.timestampOffset,
                                 compactMode: compactMode,
+                                fontSize: fontSize,
                                 onSeek: { time in
                                     playerViewModel.seek(to: time)
                                 }
@@ -150,11 +153,17 @@ struct TranscriptContentView: View {
     }
 
     private var filteredSegments: [Segment] {
-        guard !searchText.isEmpty else { return sortedSegments }
-        return sortedSegments.filter {
-            $0.text.localizedCaseInsensitiveContains(searchText) ||
-            ($0.speaker?.label.localizedCaseInsensitiveContains(searchText) ?? false)
+        var result = sortedSegments
+        if favoritesOnly {
+            result = result.filter { $0.isStarred }
         }
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.text.localizedCaseInsensitiveContains(searchText) ||
+                ($0.speaker?.label.localizedCaseInsensitiveContains(searchText) ?? false)
+            }
+        }
+        return result
     }
 
     private func isSegmentActive(_ segment: Segment) -> Bool {
