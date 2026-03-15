@@ -55,5 +55,13 @@ struct ContentView: View {
                 Task { await viewModel.importFile(url: url) }
             }
         }
+        .sheet(isPresented: Binding(
+            get: { viewModel.showRecordingSheet },
+            set: { viewModel.showRecordingSheet = $0 }
+        )) {
+            RecordingView(viewModel: RecordingViewModel()) { recordedURL in
+                Task { await viewModel.importFile(url: recordedURL) }
+            }
+        }
     }
 }
