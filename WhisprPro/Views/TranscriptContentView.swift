@@ -197,6 +197,29 @@ struct TranscriptContentView: View {
                 splitSegment(segment)
             }
         }
+
+        // After existing merge/split buttons, add:
+        if !transcription.speakers.isEmpty {
+            Divider()
+            Menu("Assign Speaker") {
+                Button("None") {
+                    segment.speaker = nil
+                }
+                Divider()
+                ForEach(transcription.speakers) { speaker in
+                    Button {
+                        segment.speaker = speaker
+                    } label: {
+                        HStack {
+                            Circle()
+                                .fill(Color(hex: speaker.color) ?? .blue)
+                                .frame(width: 8, height: 8)
+                            Text(speaker.label)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private func mergeSegments(_ first: Segment, with second: Segment) {

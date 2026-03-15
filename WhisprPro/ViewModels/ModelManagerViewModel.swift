@@ -21,16 +21,29 @@ final class ModelManagerViewModel {
         models = (try? modelContext.fetch(descriptor)) ?? []
 
         if models.isEmpty {
+            // Seed whisper models
             for def in ModelManager.availableWhisperModels {
                 let model = MLModelInfo(name: def.name, kind: .whisper, size: def.size)
                 model.isDownloaded = modelManager.isModelDownloaded(name: def.name, kind: .whisper)
                 modelContext.insert(model)
             }
-            do {
-                try modelContext.save()
-            } catch {
-                logger.error("Failed to save context: \(error)")
-            }
+            // Seed diarization model
+            let diarizationDef = ModelManager.diarizationModel
+            let diaModel = MLModelInfo(name: diarizationDef.name, kind: .diarization, size: diarizationDef.size)
+            diaModel.isDownloaded = modelManager.isModelDownloaded(name: diarizationDef.name, kind: .diarization)
+            modelContext.insert(diaModel)
+
+            do { try modelContext.save() } catch { logger.error("Failed to save context: \(error)") }
+            models = (try? modelContext.fetch(descriptor)) ?? []
+        }
+
+        // Ensure diarization model entry exists even if whisper models were already seeded
+        if !models.contains(where: { $0.kind == .diarization }) {
+            let diarizationDef = ModelManager.diarizationModel
+            let diaModel = MLModelInfo(name: diarizationDef.name, kind: .diarization, size: diarizationDef.size)
+            diaModel.isDownloaded = modelManager.isModelDownloaded(name: diarizationDef.name, kind: .diarization)
+            modelContext.insert(diaModel)
+            do { try modelContext.save() } catch { logger.error("Failed to save context: \(error)") }
             models = (try? modelContext.fetch(descriptor)) ?? []
         }
     }
@@ -44,14 +57,22 @@ final class ModelManagerViewModel {
     }
 
     func downloadModel(_ model: MLModelInfo) async {
-        guard let definition = ModelManager.availableWhisperModels.first(where: { $0.name == model.name }) else {
+        let definition: WhisperModelDefinition?
+        if model.kind == .whisper {
+            definition = ModelManager.availableWhisperModels.first(where: { $0.name == model.name })
+        } else {
+            definition = model.name == ModelManager.diarizationModel.name ? ModelManager.diarizationModel : nil
+        }
+
+        guard let definition else {
+            logger.error("No definition found for model: \(model.name)")
             return
         }
 
         downloadProgress[model.name] = 0.01
 
         do {
-            let url = try await modelManager.downloadModel(definition: definition) { [weak self] progress in
+            let url = try await modelManager.downloadModel(definition: definition, kind: model.kind) { [weak self] progress in
                 Task { @MainActor [weak self] in
                     self?.downloadProgress[definition.name] = progress
                 }

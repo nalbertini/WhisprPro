@@ -140,6 +140,15 @@ struct InspectorView: View {
                                 }
                             }
                         }
+
+                        // Add speaker button
+                        Button {
+                            addSpeaker()
+                        } label: {
+                            Label("Add Speaker", systemImage: "person.badge.plus")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
 
                     Divider()
@@ -228,6 +237,20 @@ struct InspectorView: View {
         }.joined(separator: "\n")
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    private func addSpeaker() {
+        let count = transcription.speakers.count + 1
+        let colors = ["#007AFF", "#FF9500", "#34C759", "#FF3B30", "#AF52DE", "#FF2D55", "#5AC8FA", "#FFCC00"]
+        let speaker = Speaker(
+            label: "Speaker \(count)",
+            color: colors[(count - 1) % colors.count]
+        )
+        speaker.transcription = transcription
+        // We need modelContext to insert - get it from the transcription
+        if let context = transcription.modelContext {
+            context.insert(speaker)
+        }
     }
 
     private func removeFillerWords() {

@@ -19,6 +19,12 @@ final class ModelManager: Sendable {
         WhisperModelDefinition(name: "large-v3-turbo", size: 1_600_000_000, downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!),
     ]
 
+    static let diarizationModel = WhisperModelDefinition(
+        name: "diarization-pyannote",
+        size: 17_000_000,  // ~17 MB
+        downloadURL: URL(string: "https://huggingface.co/pyannote/wespeaker-voxceleb-resnet34-LM/resolve/main/pytorch_model.bin")!
+    )
+
     private static let appSupportDir: URL = {
         guard let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             fatalError("Application Support directory not available")
@@ -33,7 +39,12 @@ final class ModelManager: Sendable {
     }
 
     func modelPath(name: String, kind: ModelKind) -> URL {
-        let filename = kind == .whisper ? "ggml-\(name).bin" : "\(name).mlmodel"
+        let filename: String
+        if kind == .whisper {
+            filename = "ggml-\(name).bin"
+        } else {
+            filename = "\(name).bin"
+        }
         return modelsDirectory(for: kind).appendingPathComponent(filename)
     }
 
@@ -47,9 +58,9 @@ final class ModelManager: Sendable {
         try fm.createDirectory(at: modelsDirectory(for: .diarization), withIntermediateDirectories: true)
     }
 
-    func downloadModel(definition: WhisperModelDefinition, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
+    func downloadModel(definition: WhisperModelDefinition, kind: ModelKind = .whisper, progress: @escaping @Sendable (Double) -> Void) async throws -> URL {
         try ensureDirectoriesExist()
-        let destination = modelPath(name: definition.name, kind: .whisper)
+        let destination = modelPath(name: definition.name, kind: kind)
 
         let delegate = DownloadDelegate(progressHandler: progress)
         let (fileURL, _) = try await delegate.download(from: definition.downloadURL)
