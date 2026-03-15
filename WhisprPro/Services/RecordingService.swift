@@ -87,24 +87,32 @@ final class RecordingService {
             }
 
             // Convert to 16kHz mono and write
-            let frameCapacity = AVAudioFrameCount(
-                Double(buffer.frameLength) * processingFormat.sampleRate / inputFormat.sampleRate
-            )
+            let ratio = processingFormat.sampleRate / inputFormat.sampleRate
+            let frameCapacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio)
             guard frameCapacity > 0,
                   let convertedBuffer = AVAudioPCMBuffer(pcmFormat: processingFormat, frameCapacity: frameCapacity) else {
                 return
             }
 
             var error: NSError?
+            var hasData = true
             audioConverter.convert(to: convertedBuffer, error: &error) { _, outStatus in
-                outStatus.pointee = .haveData
-                return buffer
+                if hasData {
+                    hasData = false
+                    outStatus.pointee = .haveData
+                    return buffer
+                } else {
+                    outStatus.pointee = .noDataNow
+                    return nil
+                }
             }
 
             if let error {
                 logger.error("Conversion error: \(error)")
                 return
             }
+
+            guard convertedBuffer.frameLength > 0 else { return }
 
             do {
                 try audioFile.write(from: convertedBuffer)
