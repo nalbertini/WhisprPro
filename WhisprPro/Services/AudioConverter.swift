@@ -37,25 +37,36 @@ struct AudioConverter {
             throw AudioConverterError.conversionFailed("No audio track found")
         }
 
-        let outputSettings: [String: Any] = [
+        let readerSettings: [String: Any] = [
             AVFormatIDKey: kAudioFormatLinearPCM,
             AVSampleRateKey: 16000.0,
             AVNumberOfChannelsKey: 1,
             AVLinearPCMBitDepthKey: 16,
             AVLinearPCMIsFloatKey: false,
             AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsNonInterleaved: false,
+        ]
+
+        let writerSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVSampleRateKey: 16000.0,
+            AVNumberOfChannelsKey: 1,
+            AVLinearPCMBitDepthKey: 16,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsNonInterleaved: false,
         ]
 
         guard let reader = try? AVAssetReader(asset: asset) else {
             throw AudioConverterError.conversionFailed("Cannot create asset reader")
         }
-        let readerOutput = AVAssetReaderTrackOutput(track: audioTrack, outputSettings: outputSettings)
+        let readerOutput = AVAssetReaderTrackOutput(track: audioTrack, outputSettings: readerSettings)
         reader.add(readerOutput)
 
         guard let writer = try? AVAssetWriter(outputURL: output, fileType: .wav) else {
             throw AudioConverterError.conversionFailed("Cannot create asset writer")
         }
-        let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: outputSettings)
+        let writerInput = AVAssetWriterInput(mediaType: .audio, outputSettings: writerSettings)
         writer.add(writerInput)
 
         reader.startReading()
