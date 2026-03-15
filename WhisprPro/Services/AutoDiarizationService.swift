@@ -7,7 +7,7 @@ private let logger = Logger(subsystem: "com.whisprpro", category: "AutoDiarizati
 
 actor AutoDiarizationService {
 
-    /// Analyze audio and assign speakers to existing segments based on voice characteristics
+    /// Try pyannote via Python subprocess first, fall back to audio analysis
     func assignSpeakers(
         audioURL: URL,
         segments: [Segment],
@@ -15,8 +15,195 @@ actor AutoDiarizationService {
     ) async throws -> Int {
         guard !segments.isEmpty else { return 0 }
 
-        progress("Loading audio...")
         logger.info("Starting auto-diarization for \(segments.count) segments")
+
+        // Try pyannote subprocess first
+        do {
+            progress("Running pyannote speaker detection...")
+            let count = try await assignSpeakersViaPyannote(audioURL: audioURL, segments: segments, progress: progress)
+            return count
+        } catch {
+            logger.info("Pyannote not available (\(error.localizedDescription)), falling back to audio analysis")
+            progress("Using audio analysis...")
+        }
+
+        // Fall back to audio-based analysis
+        return try await assignSpeakersViaAudioAnalysis(audioURL: audioURL, segments: segments, progress: progress)
+    }
+
+    // MARK: - Pyannote (Python subprocess)
+
+    private func assignSpeakersViaPyannote(
+        audioURL: URL,
+        segments: [Segment],
+        progress: @escaping @Sendable (String) -> Void
+    ) async throws -> Int {
+        // Find diarize.py script
+        let scriptPaths = [
+            Bundle.main.resourcePath.map { "\($0)/../../../scripts/diarize.py" },
+            Bundle.main.bundlePath + "/Contents/Resources/scripts/diarize.py",
+        ].compactMap { $0 }
+
+        // Also check project directory (development mode)
+        let devScript = audioURL.deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("scripts/diarize.py")
+
+        var scriptPath: String?
+        for path in scriptPaths {
+            if FileManager.default.fileExists(atPath: path) {
+                scriptPath = path
+                break
+            }
+        }
+        if scriptPath == nil && FileManager.default.fileExists(atPath: devScript.path(percentEncoded: false)) {
+            scriptPath = devScript.path(percentEncoded: false)
+        }
+
+        // Try common locations
+        let commonPaths = [
+            "/Users/nicola/Automation/WhisprPro/scripts/diarize.py",  // Dev path
+        ]
+        if scriptPath == nil {
+            scriptPath = commonPaths.first { FileManager.default.fileExists(atPath: $0) }
+        }
+
+        guard let script = scriptPath else {
+            throw AutoDiarizationError.pyannoteNotAvailable
+        }
+
+        // Find python3
+        let pythonPaths = ["/opt/homebrew/bin/python3", "/usr/local/bin/python3", "/usr/bin/python3"]
+        guard let python = pythonPaths.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
+            throw AutoDiarizationError.pyannoteNotAvailable
+        }
+
+        let audioPath = audioURL.path(percentEncoded: false)
+
+        // Run subprocess
+        let result: (exitCode: Int32, stdout: String, stderr: String) = try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let proc = Process()
+                    proc.executableURL = URL(fileURLWithPath: python)
+                    proc.arguments = [script, audioPath]
+
+                    var env = ProcessInfo.processInfo.environment
+                    env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+                    proc.environment = env
+
+                    let outPipe = Pipe()
+                    let errPipe = Pipe()
+                    proc.standardOutput = outPipe
+                    proc.standardError = errPipe
+
+                    var stderrData = Data()
+                    errPipe.fileHandleForReading.readabilityHandler = { handle in
+                        let data = handle.availableData
+                        if !data.isEmpty {
+                            stderrData.append(data)
+                            if let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                               !line.isEmpty {
+                                progress(line)
+                            }
+                        }
+                    }
+
+                    proc.terminationHandler = { p in
+                        errPipe.fileHandleForReading.readabilityHandler = nil
+                        let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
+                        let stdout = String(data: outData, encoding: .utf8) ?? ""
+                        let stderr = String(data: stderrData, encoding: .utf8) ?? ""
+                        continuation.resume(returning: (p.terminationStatus, stdout, stderr))
+                    }
+
+                    try proc.run()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+
+        guard result.exitCode == 0 else {
+            throw AutoDiarizationError.pyannoteNotAvailable
+        }
+
+        // Parse JSON output
+        guard let jsonData = result.stdout.data(using: .utf8) else {
+            throw AutoDiarizationError.pyannoteNotAvailable
+        }
+
+        struct DiarizeResult: Decodable {
+            let num_speakers: Int?
+            let segments: [DiarizeSegment]?
+            let error: String?
+        }
+        struct DiarizeSegment: Decodable {
+            let start: Double
+            let end: Double
+            let speaker: Int
+        }
+
+        let diarizeResult = try JSONDecoder().decode(DiarizeResult.self, from: jsonData)
+
+        if let error = diarizeResult.error {
+            throw AutoDiarizationError.pyannoteFailed(error)
+        }
+
+        guard let diarizeSegments = diarizeResult.segments, !diarizeSegments.isEmpty else {
+            throw AutoDiarizationError.noVoiceData
+        }
+
+        // Map pyannote segments to whisper segments by timestamp overlap
+        let speakerColors = ["#007AFF", "#FF9500", "#34C759", "#FF3B30", "#AF52DE", "#FF2D55"]
+        let numSpeakers = diarizeResult.num_speakers ?? (diarizeSegments.map(\.speaker).max()! + 1)
+        var speakerMap: [Int: Speaker] = [:]
+
+        // Create speakers
+        for i in 0..<numSpeakers {
+            let speaker = Speaker(
+                label: "Speaker \(i + 1)",
+                color: speakerColors[i % speakerColors.count]
+            )
+            speaker.transcription = segments.first?.transcription
+            if let context = segments.first?.transcription?.modelContext {
+                context.insert(speaker)
+            }
+            speakerMap[i] = speaker
+        }
+
+        // Assign each whisper segment to the speaker with most overlap
+        for segment in segments {
+            var bestSpeaker = 0
+            var bestOverlap: Double = 0
+
+            for ds in diarizeSegments {
+                let overlapStart = max(segment.startTime, ds.start)
+                let overlapEnd = min(segment.endTime, ds.end)
+                let overlap = max(0, overlapEnd - overlapStart)
+                if overlap > bestOverlap {
+                    bestOverlap = overlap
+                    bestSpeaker = ds.speaker
+                }
+            }
+
+            segment.speaker = speakerMap[bestSpeaker]
+        }
+
+        logger.info("Pyannote diarization complete: \(numSpeakers) speakers")
+        progress("Done! \(numSpeakers) speakers detected (pyannote)")
+        return numSpeakers
+    }
+
+    // MARK: - Audio Analysis Fallback
+
+    private func assignSpeakersViaAudioAnalysis(
+        audioURL: URL,
+        segments: [Segment],
+        progress: @escaping @Sendable (String) -> Void
+    ) async throws -> Int {
+        progress("Loading audio...")
 
         // Load audio as float samples
         let audioFile = try AVAudioFile(forReading: audioURL)
@@ -206,11 +393,15 @@ actor AutoDiarizationService {
 enum AutoDiarizationError: Error, LocalizedError {
     case audioLoadFailed
     case noVoiceData
+    case pyannoteNotAvailable
+    case pyannoteFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .audioLoadFailed: "Failed to load audio file for analysis"
         case .noVoiceData: "Could not extract voice data for speaker detection"
+        case .pyannoteNotAvailable: "pyannote not available, using audio analysis"
+        case .pyannoteFailed(let msg): "Diarization failed: \(msg)"
         }
     }
 }
