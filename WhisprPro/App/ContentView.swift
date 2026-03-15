@@ -61,7 +61,7 @@ struct ContentView: View {
                             favoritesOnly: $favoritesOnly,
                             compactMode: $compactMode
                         )
-                        .frame(width: 240)
+                        .frame(minWidth: 220, idealWidth: 280, maxWidth: 400)
                     }
                 }
             } else {
