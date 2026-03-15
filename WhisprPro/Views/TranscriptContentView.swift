@@ -40,6 +40,7 @@ struct TranscriptContentView: View {
                     Button("CSV (.csv)") { exportAs(.csv) }
                     Button("Markdown (.md)") { exportAs(.md) }
                     Button("HTML (.html)") { exportAs(.html) }
+                    Button("Word (.docx)") { exportAs(.docx) }
                 }
                 .fixedSize()
 
@@ -136,14 +137,21 @@ struct TranscriptContentView: View {
             }
 
             // Player fixed at bottom
-            if transcription.sourceURL != nil {
+            if let sourceURL = transcription.sourceURL {
                 Divider()
-                AudioPlayerView(viewModel: playerViewModel)
-                    .onAppear {
-                        if let url = transcription.sourceURL {
-                            playerViewModel.loadAudio(url: url)
+                let ext = sourceURL.pathExtension.lowercased()
+                if ext == "mp4" || ext == "mov" || ext == "m4v" {
+                    VideoPlayerView(
+                        url: sourceURL,
+                        playerViewModel: playerViewModel,
+                        subtitles: sortedSegments.map { ($0.startTime, $0.endTime, $0.text) }
+                    )
+                } else {
+                    AudioPlayerView(viewModel: playerViewModel)
+                        .onAppear {
+                            playerViewModel.loadAudio(url: sourceURL)
                         }
-                    }
+                }
             }
         }
     }
@@ -226,7 +234,7 @@ struct TranscriptContentView: View {
 
     // MARK: - Export
 
-    enum ExportFormat { case srt, vtt, txt, json, pdf, csv, md, html }
+    enum ExportFormat { case srt, vtt, txt, json, pdf, csv, md, html, docx }
 
     private func exportAs(_ format: ExportFormat) {
         let segments: [ExportService.ExportSegment] = sortedSegments.map { seg in
@@ -243,6 +251,7 @@ struct TranscriptContentView: View {
         case .csv: panel.allowedContentTypes = [.commaSeparatedText]
         case .md: panel.allowedContentTypes = [.init(filenameExtension: "md")!]
         case .html: panel.allowedContentTypes = [.html]
+        case .docx: panel.allowedContentTypes = [.init(filenameExtension: "docx")!]
         }
         panel.nameFieldStringValue = transcription.title
 
@@ -275,6 +284,14 @@ struct TranscriptContentView: View {
         )
         case .pdf:
             data = ExportService.toPDF(
+                title: transcription.title,
+                language: transcription.language,
+                duration: transcription.duration,
+                segments: segments
+            )
+            content = ""
+        case .docx:
+            data = ExportService.toDOCX(
                 title: transcription.title,
                 language: transcription.language,
                 duration: transcription.duration,

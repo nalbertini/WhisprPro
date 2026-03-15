@@ -255,4 +255,108 @@ struct ExportService {
         }
         return String(format: "%02d:%02d", minutes, seconds)
     }
+
+    static func toDOCX(
+        title: String,
+        language: String,
+        duration: TimeInterval,
+        segments: [ExportSegment]
+    ) -> Data? {
+        let durationStr = "\(Int(duration) / 60):\(String(format: "%02d", Int(duration) % 60))"
+
+        // Build document.xml content
+        var paragraphs = ""
+
+        // Title
+        paragraphs += """
+        <w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr>
+        <w:r><w:rPr><w:b/><w:sz w:val="36"/></w:rPr>
+        <w:t>\(escapeXML(title))</w:t></w:r></w:p>
+        """
+
+        // Metadata
+        paragraphs += """
+        <w:p><w:r><w:rPr><w:color w:val="888888"/><w:sz w:val="22"/></w:rPr>
+        <w:t>Language: \(escapeXML(language)) | Duration: \(durationStr)</w:t></w:r></w:p>
+        <w:p/>
+        """
+
+        // Segments
+        for seg in segments {
+            var run = ""
+            if let speaker = seg.speaker {
+                run += """
+                <w:r><w:rPr><w:b/><w:color w:val="007AFF"/></w:rPr>
+                <w:t xml:space="preserve">\(escapeXML(speaker)): </w:t></w:r>
+                """
+            }
+            run += """
+            <w:r><w:rPr><w:color w:val="999999"/><w:sz w:val="18"/></w:rPr>
+            <w:t xml:space="preserve">[\(simpleTimestamp(seg.start))] </w:t></w:r>
+            """
+            run += """
+            <w:r><w:t xml:space="preserve">\(escapeXML(seg.text))</w:t></w:r>
+            """
+            paragraphs += "<w:p>\(run)</w:p>\n"
+        }
+
+        let documentXML = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+        <w:body>
+        \(paragraphs)
+        </w:body>
+        </w:document>
+        """
+
+        let contentTypesXML = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+        <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+        <Default Extension="xml" ContentType="application/xml"/>
+        <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+        </Types>
+        """
+
+        let relsXML = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+        </Relationships>
+        """
+
+        // Create ZIP archive (DOCX is a ZIP file)
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+
+        let wordDir = tempDir.appendingPathComponent("word")
+        let relsDir = tempDir.appendingPathComponent("_rels")
+        try? FileManager.default.createDirectory(at: wordDir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: relsDir, withIntermediateDirectories: true)
+
+        try? contentTypesXML.write(to: tempDir.appendingPathComponent("[Content_Types].xml"), atomically: true, encoding: .utf8)
+        try? relsXML.write(to: relsDir.appendingPathComponent(".rels"), atomically: true, encoding: .utf8)
+        try? documentXML.write(to: wordDir.appendingPathComponent("document.xml"), atomically: true, encoding: .utf8)
+
+        // Use NSFileCoordinator to create ZIP
+        let coordinator = NSFileCoordinator()
+        var zipData: Data?
+        var error: NSError?
+
+        coordinator.coordinate(readingItemAt: tempDir, options: .forUploading, error: &error) { zippedURL in
+            zipData = try? Data(contentsOf: zippedURL)
+        }
+
+        try? FileManager.default.removeItem(at: tempDir)
+
+        return zipData
+    }
+
+    private static func escapeXML(_ string: String) -> String {
+        string
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+    }
 }
