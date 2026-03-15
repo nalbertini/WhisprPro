@@ -17,10 +17,10 @@ final class RealtimeCaptionService {
     private let modelManager = ModelManager()
     private var processingTask: Task<Void, Never>?
 
-    // Buffer 5 seconds of audio, process every 3 seconds with 2s overlap
+    // Buffer 8 seconds of audio, process every 4 seconds with 4s overlap
     private let sampleRate: Double = 16000
-    private let windowDuration: Double = 5.0
-    private let processingInterval: Double = 3.0
+    private let windowDuration: Double = 8.0
+    private let processingInterval: Double = 4.0
 
     var language: String = "auto"
 
@@ -140,6 +140,14 @@ final class RealtimeCaptionService {
             audioBuffer = Array(audioBuffer.suffix(overlapSamples))
         }
 
+        // VAD: Skip if audio energy is too low (silence)
+        let energy = window.reduce(Float(0)) { $0 + $1 * $1 } / Float(window.count)
+        let rms = sqrt(energy)
+        if rms < 0.005 {
+            logger.debug("Skipping silent window (RMS: \(rms))")
+            return
+        }
+
         // Write to temp WAV file for whisper
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("realtime_\(UUID().uuidString).wav")
@@ -157,11 +165,14 @@ final class RealtimeCaptionService {
             let cleanSegments = result.filter { !Self.isNoise($0.text) }
             let text = cleanSegments.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespaces)
 
-            if !text.isEmpty && text != currentText {
+            // Skip empty, duplicate, or very short single-word results
+            let isDuplicate = text == currentText || segments.last?.text == text
+            let isTooShort = text.split(separator: " ").count <= 1 && text.count < 8
+
+            if !text.isEmpty && !isDuplicate && !isTooShort {
                 await MainActor.run {
                     currentText = text
                     segments.append((time: Date(), text: text))
-                    // Keep last 50 segments
                     if segments.count > 50 {
                         segments.removeFirst()
                     }
