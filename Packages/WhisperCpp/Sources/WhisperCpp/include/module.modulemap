@@ -1,0 +1,4 @@
+module WhisperCpp {
+    header "whisper_wrapper.h"
+    export *
+}
