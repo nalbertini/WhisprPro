@@ -27,9 +27,15 @@ struct ModelManagerView: View {
                         .foregroundStyle(.red)
                         .font(.caption)
                     }
-                } else if model.downloadProgress > 0 && model.downloadProgress < 1 {
-                    ProgressView(value: model.downloadProgress)
-                        .frame(width: 100)
+                } else if viewModel.isDownloading(model) {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        ProgressView(value: viewModel.progress(for: model))
+                            .frame(width: 120)
+                        Text("\(Int(viewModel.progress(for: model) * 100))%")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
                 } else {
                     Button("Download") {
                         Task { await viewModel.downloadModel(model) }
