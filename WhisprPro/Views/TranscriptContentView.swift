@@ -89,26 +89,28 @@ struct TranscriptContentView: View {
             // Transcript content
             if transcription.status == .completed {
                 ScrollViewReader { proxy in
-                    List {
-                        ForEach(filteredSegments) { segment in
-                            EditorView(
-                                segment: segment,
-                                isActive: isSegmentActive(segment),
-                                searchText: searchText,
-                                timestampOffset: transcription.timestampOffset,
-                                compactMode: compactMode,
-                                fontSize: fontSize,
-                                onSeek: { time in
-                                    playerViewModel.seek(to: time)
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            ForEach(filteredSegments) { segment in
+                                EditorView(
+                                    segment: segment,
+                                    isActive: isSegmentActive(segment),
+                                    searchText: searchText,
+                                    timestampOffset: transcription.timestampOffset,
+                                    compactMode: compactMode,
+                                    fontSize: fontSize,
+                                    onSeek: { time in
+                                        playerViewModel.seek(to: time)
+                                    }
+                                )
+                                .id(segment.id)
+                                .contextMenu {
+                                    segmentContextMenu(for: segment)
                                 }
-                            )
-                            .id(segment.id)
-                            .contextMenu {
-                                segmentContextMenu(for: segment)
                             }
                         }
+                        .padding(.horizontal)
                     }
-                    .listStyle(.plain)
                     .onChange(of: searchText) {
                         searchResultCount = filteredSegments.count
                     }
