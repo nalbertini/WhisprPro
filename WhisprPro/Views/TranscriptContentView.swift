@@ -10,6 +10,7 @@ struct TranscriptContentView: View {
     var fontSize: Double = 15
     var favoritesOnly: Bool = false
     var compactMode: Bool = false
+    var groupSegments: Bool = false
     @State private var searchText = ""
     @State private var searchResultCount = 0
 
@@ -162,6 +163,32 @@ struct TranscriptContentView: View {
 
     private var filteredSegments: [Segment] {
         var result = sortedSegments
+
+        // Group short consecutive segments into paragraphs
+        if groupSegments && !result.isEmpty {
+            var grouped: [Segment] = []
+            var current = result[0]
+
+            for i in 1..<result.count {
+                let next = result[i]
+                let gap = next.startTime - current.endTime
+                let sameSpeaker = current.speaker?.id == next.speaker?.id
+                let currentShort = current.text.count < 80
+
+                // Merge if: same speaker (or no speakers), gap < 2s, current text is short
+                if sameSpeaker && gap < 2.0 && currentShort {
+                    current.text = current.text + " " + next.text
+                    current.endTime = next.endTime
+                    if next.isStarred { current.isStarred = true }
+                } else {
+                    grouped.append(current)
+                    current = next
+                }
+            }
+            grouped.append(current)
+            result = grouped
+        }
+
         if favoritesOnly {
             result = result.filter { $0.isStarred }
         }

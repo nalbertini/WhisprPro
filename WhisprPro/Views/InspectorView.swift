@@ -6,6 +6,7 @@ struct InspectorView: View {
     @Binding var fontSize: Double
     @Binding var favoritesOnly: Bool
     @Binding var compactMode: Bool
+    @Binding var groupSegments: Bool
 
     @State private var isDetectingSpeakers = false
     @State private var diarizationStatus = ""
@@ -104,6 +105,7 @@ struct InspectorView: View {
 
                         Toggle("Favorites Only", isOn: $favoritesOnly)
                         Toggle("Compact Mode", isOn: $compactMode)
+                        Toggle("Group Segments", isOn: $groupSegments)
                     }
 
                     Divider()

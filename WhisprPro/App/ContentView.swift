@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var fontSize: Double = 15
     @State private var favoritesOnly = false
     @State private var compactMode = false
+    @State private var groupSegments = true
     @State private var showCaptions = false
     @State private var showYouTubeImport = false
 
@@ -51,7 +52,8 @@ struct ContentView: View {
                         playerViewModel: playerViewModel,
                         fontSize: fontSize,
                         favoritesOnly: favoritesOnly,
-                        compactMode: compactMode
+                        compactMode: compactMode,
+                        groupSegments: groupSegments
                     )
 
                     if showInspector {
@@ -59,7 +61,8 @@ struct ContentView: View {
                             transcription: transcription,
                             fontSize: $fontSize,
                             favoritesOnly: $favoritesOnly,
-                            compactMode: $compactMode
+                            compactMode: $compactMode,
+                            groupSegments: $groupSegments
                         )
                         .frame(minWidth: 220, idealWidth: 280, maxWidth: 400)
                     }
