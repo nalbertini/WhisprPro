@@ -7,8 +7,8 @@ final class Segment {
     var startTime: TimeInterval
     var endTime: TimeInterval
     var text: String
-    var isEdited: Bool
-    var isStarred: Bool
+    var isEdited: Bool = false
+    var isStarred: Bool = false
     var transcription: Transcription?
     var speaker: Speaker?
 
