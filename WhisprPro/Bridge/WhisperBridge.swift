@@ -1,5 +1,8 @@
 import Foundation
 import WhisperCpp
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "WhisperBridge")
 
 struct WhisperSegment {
     let startTime: TimeInterval
@@ -31,10 +34,22 @@ actor WhisperBridge {
         if let ctx = context {
             wrapper_free(ctx)
         }
-        guard let ctx = wrapper_init(path.path()) else {
+        let pathStr = path.path()
+        let exists = FileManager.default.fileExists(atPath: pathStr)
+        let size = (try? FileManager.default.attributesOfItem(atPath: pathStr)[.size] as? Int64) ?? 0
+        logger.info("Loading model: \(pathStr), exists: \(exists), size: \(size) bytes")
+
+        guard exists else {
+            logger.error("Model file not found at path: \(pathStr)")
+            throw WhisperBridgeError.modelLoadFailed
+        }
+
+        guard let ctx = wrapper_init(pathStr) else {
+            logger.error("whisper_init_from_file returned NULL for: \(pathStr)")
             throw WhisperBridgeError.modelLoadFailed
         }
         self.context = ctx
+        logger.info("Model loaded successfully")
     }
 
     func transcribe(

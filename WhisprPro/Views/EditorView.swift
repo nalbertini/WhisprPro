@@ -3,6 +3,7 @@ import SwiftUI
 struct EditorView: View {
     @Bindable var segment: Segment
     let isActive: Bool
+    var searchText: String = ""
     let onSeek: (TimeInterval) -> Void
 
     var body: some View {
@@ -28,12 +29,17 @@ struct EditorView: View {
                 }
             }
 
-            TextField("", text: $segment.text, axis: .vertical)
-                .textFieldStyle(.plain)
-                .font(.body)
-                .onChange(of: segment.text) {
-                    segment.isEdited = true
-                }
+            if searchText.isEmpty {
+                TextField("", text: $segment.text, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(.body)
+                    .onChange(of: segment.text) {
+                        segment.isEdited = true
+                    }
+            } else {
+                highlightedText(segment.text, highlight: searchText)
+                    .font(.body)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -43,6 +49,29 @@ struct EditorView: View {
         .onTapGesture {
             onSeek(segment.startTime)
         }
+    }
+
+    private func highlightedText(_ text: String, highlight: String) -> Text {
+        guard !highlight.isEmpty else { return Text(text) }
+
+        let lowercasedText = text.lowercased()
+        let lowercasedHighlight = highlight.lowercased()
+
+        var result = Text("")
+        var searchRange = lowercasedText.startIndex..<lowercasedText.endIndex
+
+        while let range = lowercasedText.range(of: lowercasedHighlight, range: searchRange) {
+            let before = text[searchRange.lowerBound..<range.lowerBound]
+            let match = text[range]
+
+            result = result + Text(before) + Text(match).bold().foregroundColor(.yellow)
+            searchRange = range.upperBound..<lowercasedText.endIndex
+        }
+
+        let remaining = text[searchRange.lowerBound...]
+        result = result + Text(remaining)
+
+        return result
     }
 
     private func formatTimestamp(_ time: TimeInterval) -> String {

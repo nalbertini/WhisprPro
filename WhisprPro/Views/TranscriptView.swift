@@ -7,6 +7,8 @@ private let logger = Logger(subsystem: "com.whisprpro", category: "Export")
 struct TranscriptView: View {
     let transcription: Transcription
     @Bindable var playerViewModel: AudioPlayerViewModel
+    @State private var searchText = ""
+    @State private var searchResultCount = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -43,9 +45,42 @@ struct TranscriptView: View {
                     ) {
                         Label("Share", systemImage: "square.and.arrow.up")
                     }
+
+                    Spacer()
+
+                    Button("Remove Fillers") {
+                        removeFillerWords()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
             }
             .padding()
+
+            // Search bar
+            if transcription.status == .completed {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search transcript...", text: $searchText)
+                        .textFieldStyle(.plain)
+                    if !searchText.isEmpty {
+                        Text("\(searchResultCount) found")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .background(.bar)
+            }
 
             Divider()
 
@@ -65,10 +100,11 @@ struct TranscriptView: View {
             if transcription.status == .completed {
                 ScrollViewReader { proxy in
                     List {
-                        ForEach(sortedSegments) { segment in
+                        ForEach(filteredSegments) { segment in
                             EditorView(
                                 segment: segment,
                                 isActive: isSegmentActive(segment),
+                                searchText: searchText,
                                 onSeek: { time in
                                     playerViewModel.seek(to: time)
                                 }
@@ -80,6 +116,9 @@ struct TranscriptView: View {
                         }
                     }
                     .listStyle(.plain)
+                    .onChange(of: searchText) {
+                        searchResultCount = filteredSegments.count
+                    }
                 }
             } else if transcription.status == .transcribing || transcription.status == .diarizing {
                 VStack(spacing: 12) {
@@ -111,6 +150,24 @@ struct TranscriptView: View {
 
     private var sortedSegments: [Segment] {
         transcription.segments.sorted { $0.startTime < $1.startTime }
+    }
+
+    private var filteredSegments: [Segment] {
+        guard !searchText.isEmpty else { return sortedSegments }
+        return sortedSegments.filter {
+            $0.text.localizedCaseInsensitiveContains(searchText) ||
+            ($0.speaker?.label.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
+    }
+
+    private func removeFillerWords() {
+        for segment in sortedSegments {
+            let cleaned = FillerWordService.removeFillersFrom(segment.text)
+            if cleaned != segment.text {
+                segment.text = cleaned
+                segment.isEdited = true
+            }
+        }
     }
 
     private func isSegmentActive(_ segment: Segment) -> Bool {
