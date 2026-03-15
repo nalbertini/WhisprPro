@@ -12,7 +12,7 @@ typedef struct {
     const char *text;
 } whisper_segment_result;
 
-typedef void (*whisper_progress_callback)(float progress, void *user_data);
+typedef void (*wrapper_progress_callback)(float progress, void *user_data);
 
 whisper_context *wrapper_init(const char *model_path);
 void wrapper_free(whisper_context *ctx);
@@ -22,7 +22,7 @@ int wrapper_transcribe(
     const char *audio_path,
     const char *language,
     bool translate,
-    whisper_progress_callback progress_cb,
+    wrapper_progress_callback progress_cb,
     void *user_data
 );
 

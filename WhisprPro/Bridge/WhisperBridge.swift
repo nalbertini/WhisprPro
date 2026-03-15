@@ -53,7 +53,7 @@ actor WhisperBridge {
 
         let result = await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                let progressCallback: whisper_progress_callback = { progressValue, userData in
+                let progressCallback: wrapper_progress_callback = { progressValue, userData in
                     guard let ptr = userData else { return }
                     let callback = Unmanaged<ProgressCallbackBox>.fromOpaque(ptr).takeUnretainedValue()
                     callback.callback(Double(progressValue))

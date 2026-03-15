@@ -168,7 +168,7 @@ actor DiarizationService {
             let inputFeatures = try MLDictionaryFeatureProvider(
                 dictionary: ["audio": MLFeatureValue(multiArray: inputArray)]
             )
-            let prediction = try model.prediction(from: inputFeatures)
+            let prediction = try await model.prediction(from: inputFeatures)
 
             // Extract embedding vector from model output
             guard let embeddingValue = prediction.featureValue(for: "embedding"),

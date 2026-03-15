@@ -1,0 +1,6 @@
+vendor-whisper/
+lib/
+include/
+libwhisper.xcframework/
+build/
+.build/

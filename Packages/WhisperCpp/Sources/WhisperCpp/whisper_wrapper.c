@@ -37,7 +37,7 @@ static bool load_wav_file(const char *path, float **data, int *n_samples) {
 }
 
 struct progress_user_data {
-    whisper_progress_callback cb;
+    wrapper_progress_callback cb;
     void *user_data;
 };
 
@@ -62,7 +62,7 @@ int wrapper_transcribe(
     const char *audio_path,
     const char *language,
     bool translate,
-    whisper_progress_callback progress_cb,
+    wrapper_progress_callback progress_cb,
     void *user_data
 ) {
     float *audio_data = NULL;

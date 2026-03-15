@@ -7,17 +7,23 @@ let package = Package(
     products: [
         .library(name: "WhisperCpp", targets: ["WhisperCpp"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/ggerganov/whisper.cpp.git", from: "1.7.2"),
-    ],
     targets: [
         .target(
             name: "WhisperCpp",
-            dependencies: [
-                .product(name: "whisper", package: "whisper.cpp"),
-            ],
+            dependencies: ["libwhisper"],
             path: "Sources/WhisperCpp",
-            publicHeadersPath: "include"
+            publicHeadersPath: "include",
+            linkerSettings: [
+                .linkedFramework("Accelerate"),
+                .linkedFramework("Metal"),
+                .linkedFramework("MetalKit"),
+                .linkedFramework("Foundation"),
+                .linkedLibrary("c++"),
+            ]
+        ),
+        .binaryTarget(
+            name: "libwhisper",
+            path: "libwhisper.xcframework"
         ),
     ]
 )
