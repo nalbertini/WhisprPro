@@ -29,7 +29,9 @@ actor TranscriptionService {
     }
 
     func enqueue(_ transcription: Transcription) async {
-        modelContext.insert(transcription)
+        if transcription.modelContext == nil {
+            modelContext.insert(transcription)
+        }
         do {
             try modelContext.save()
         } catch {
@@ -121,43 +123,7 @@ actor TranscriptionService {
             modelContext.insert(segment)
         }
 
-        // Diarization (if model available)
-        if modelManager.isModelDownloaded(name: "diarization-pyannote", kind: .diarization) {
-            transcription.status = .diarizing
-            do {
-                try modelContext.save()
-            } catch {
-                logger.error("Failed to save context: \(error)")
-            }
-
-            let diarizationService = DiarizationService()
-            let diarizationModelPath = modelManager.modelPath(name: "diarization-pyannote", kind: .diarization)
-            do {
-                let results = try await diarizationService.diarize(
-                    audioURL: wavURL,
-                    segments: transcription.segments,
-                    modelURL: diarizationModelPath
-                )
-                let speakerCount = Set(results.map(\.speakerIndex)).count
-                var speakers: [Int: Speaker] = [:]
-                for i in 0..<speakerCount {
-                    let speaker = Speaker(
-                        label: "Speaker \(i + 1)",
-                        color: DiarizationService.speakerColors[i % DiarizationService.speakerColors.count]
-                    )
-                    speaker.transcription = transcription
-                    modelContext.insert(speaker)
-                    speakers[i] = speaker
-                }
-                for result in results {
-                    if let segment = transcription.segments.first(where: { $0.id == result.segmentID }) {
-                        segment.speaker = speakers[result.speakerIndex]
-                    }
-                }
-            } catch {
-                transcription.diarizationError = error.localizedDescription
-            }
-        }
+        // Diarization is available via "Auto Detect Speakers" button in the inspector
 
         transcription.transcribeTime = Date().timeIntervalSince(transcribeStart)
         transcription.updatedAt = Date()
