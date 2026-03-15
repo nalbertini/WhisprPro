@@ -1,6 +1,9 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "Import")
 
 @Observable
 final class TranscriptionViewModel {
@@ -35,7 +38,7 @@ final class TranscriptionViewModel {
                 await transcriptionService.enqueue(transcription)
             }
         } catch {
-            print("Import failed: \(error)")
+            logger.error("Import failed: \(error)")
         }
     }
 

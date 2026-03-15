@@ -63,10 +63,11 @@ struct SpeakerLabelView: View {
 
     var body: some View {
         if isEditing {
-            TextField("Name", text: $editText, onCommit: {
-                speaker.label = editText
-                isEditing = false
-            })
+            TextField("Name", text: $editText)
+                .onSubmit {
+                    speaker.label = editText
+                    isEditing = false
+                }
             .textFieldStyle(.plain)
             .font(.caption)
             .fontWeight(.semibold)

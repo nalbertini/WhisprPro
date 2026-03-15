@@ -1,5 +1,8 @@
 import Foundation
 import SwiftData
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "TranscriptionService")
 
 actor TranscriptionService {
     private let modelContext: ModelContext
@@ -24,7 +27,11 @@ actor TranscriptionService {
 
     func enqueue(_ transcription: Transcription) async {
         modelContext.insert(transcription)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("Failed to save context: \(error)")
+        }
         pendingQueue.append(transcription)
         await processNextIfIdle()
     }
@@ -42,7 +49,11 @@ actor TranscriptionService {
         }
 
         isProcessing = false
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("Failed to save context: \(error)")
+        }
 
         if !pendingQueue.isEmpty {
             await processNextIfIdle()
@@ -52,7 +63,11 @@ actor TranscriptionService {
     private func processTranscription(_ transcription: Transcription) async throws {
         transcription.status = .transcribing
         transcription.progress = 0.0
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("Failed to save context: \(error)")
+        }
 
         let tempDir = FileManager.default.temporaryDirectory
         let wavURL: URL
@@ -65,7 +80,7 @@ actor TranscriptionService {
         let accessing = sourceURL.startAccessingSecurityScopedResource()
         defer { if accessing { sourceURL.stopAccessingSecurityScopedResource() } }
 
-        print("[Transcription] Source: \(sourceURL.path()), exists: \(FileManager.default.fileExists(atPath: sourceURL.path()))")
+        logger.info("Source: \(sourceURL.path()), exists: \(FileManager.default.fileExists(atPath: sourceURL.path()))")
 
         if sourceURL.pathExtension.lowercased() == "wav" {
             // Recording output is already WAV — use directly or copy to temp
@@ -79,7 +94,7 @@ actor TranscriptionService {
         }
 
         let modelPath = modelManager.modelPath(name: transcription.modelName, kind: .whisper)
-        print("[Transcription] Model path: \(modelPath.path()), exists: \(FileManager.default.fileExists(atPath: modelPath.path()))")
+        logger.info("Model path: \(modelPath.path()), exists: \(FileManager.default.fileExists(atPath: modelPath.path()))")
         try await whisperBridge.loadModel(path: modelPath)
 
         let segments = try await whisperBridge.transcribe(
@@ -101,7 +116,11 @@ actor TranscriptionService {
         // Diarization (if model available)
         if modelManager.isModelDownloaded(name: "diarization-pyannote", kind: .diarization) {
             transcription.status = .diarizing
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                logger.error("Failed to save context: \(error)")
+            }
 
             let diarizationService = DiarizationService()
             let diarizationModelPath = modelManager.modelPath(name: "diarization-pyannote", kind: .diarization)
@@ -134,7 +153,11 @@ actor TranscriptionService {
 
         transcription.status = .completed
         transcription.progress = 1.0
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("Failed to save context: \(error)")
+        }
         try? FileManager.default.removeItem(at: wavURL)
     }
 

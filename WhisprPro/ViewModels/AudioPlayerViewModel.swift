@@ -1,5 +1,8 @@
 import Foundation
 import AVFoundation
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "AudioPlayer")
 
 @Observable
 final class AudioPlayerViewModel {
@@ -18,7 +21,7 @@ final class AudioPlayerViewModel {
             player?.prepareToPlay()
             duration = player?.duration ?? 0
         } catch {
-            print("Failed to load audio: \(error)")
+            logger.error("Failed to load audio: \(error)")
         }
     }
 

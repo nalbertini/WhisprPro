@@ -95,7 +95,7 @@ actor DiarizationService {
         // Renumber clusters to 0, 1, 2, ...
         let unique = Array(Set(clusterAssignment)).sorted()
         let mapping = Dictionary(uniqueKeysWithValues: unique.enumerated().map { ($1, $0) })
-        return clusterAssignment.map { mapping[$0]! }
+        return clusterAssignment.compactMap { mapping[$0] }
     }
 
     private static func cosineDistance(_ a: [Float], _ b: [Float]) -> Float {

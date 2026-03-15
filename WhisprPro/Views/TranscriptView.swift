@@ -1,5 +1,8 @@
 import SwiftUI
 import AppKit
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "Export")
 
 struct TranscriptView: View {
     let transcription: Transcription
@@ -220,7 +223,7 @@ struct TranscriptView: View {
                 try content.write(to: url, atomically: true, encoding: .utf8)
             }
         } catch {
-            print("Export failed: \(error)")
+            logger.error("Export failed: \(error)")
         }
     }
 }

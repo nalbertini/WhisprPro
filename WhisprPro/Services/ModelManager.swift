@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "ModelManager")
 
 struct WhisperModelDefinition {
     let name: String
@@ -16,14 +19,17 @@ final class ModelManager: Sendable {
         WhisperModelDefinition(name: "large-v3-turbo", size: 1_600_000_000, downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!),
     ]
 
-    private let appSupportDir: URL
+    private static let appSupportDir: URL = {
+        guard let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            fatalError("Application Support directory not available")
+        }
+        return url.appendingPathComponent("WhisprPro")
+    }()
 
-    init() {
-        self.appSupportDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("WhisprPro")
-    }
+    init() {}
 
     func modelsDirectory(for kind: ModelKind) -> URL {
-        appSupportDir.appendingPathComponent("Models/\(kind.rawValue)")
+        Self.appSupportDir.appendingPathComponent("Models/\(kind.rawValue)")
     }
 
     func modelPath(name: String, kind: ModelKind) -> URL {

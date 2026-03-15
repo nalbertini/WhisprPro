@@ -1,5 +1,8 @@
 import Foundation
 import AVFoundation
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "Recording")
 
 @Observable
 final class RecordingService {
@@ -13,10 +16,15 @@ final class RecordingService {
     private var timer: Timer?
     private var tempFileURL: URL?
 
+    private static let appSupportDir: URL = {
+        guard let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            fatalError("Application Support directory not available")
+        }
+        return url.appendingPathComponent("WhisprPro")
+    }()
+
     let recordingsDirectory: URL = {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            .first!
-            .appendingPathComponent("WhisprPro/Recordings")
+        RecordingService.appSupportDir.appendingPathComponent("Recordings")
     }()
 
     func availableInputDevices() -> [AVCaptureDevice] {
@@ -64,7 +72,7 @@ final class RecordingService {
             do {
                 try audioFile.write(from: buffer)
             } catch {
-                print("Error writing audio: \(error)")
+                logger.error("Error writing audio: \(error)")
             }
         }
 

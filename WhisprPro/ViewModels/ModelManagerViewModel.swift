@@ -1,5 +1,8 @@
 import Foundation
 import SwiftData
+import os
+
+private let logger = Logger(subsystem: "com.whisprpro", category: "ModelManager")
 
 @Observable
 final class ModelManagerViewModel {
@@ -23,7 +26,11 @@ final class ModelManagerViewModel {
                 model.isDownloaded = modelManager.isModelDownloaded(name: def.name, kind: .whisper)
                 modelContext.insert(model)
             }
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                logger.error("Failed to save context: \(error)")
+            }
             models = (try? modelContext.fetch(descriptor)) ?? []
         }
     }
@@ -53,10 +60,14 @@ final class ModelManagerViewModel {
                 model.isDownloaded = true
                 model.localURL = url
                 downloadProgress[model.name] = 0
-                try? modelContext.save()
+                do {
+                    try modelContext.save()
+                } catch {
+                    logger.error("Failed to save context: \(error)")
+                }
             }
         } catch {
-            print("[ModelManager] Download failed: \(error)")
+            logger.error("Download failed: \(error)")
             await MainActor.run {
                 downloadProgress[model.name] = 0
             }
@@ -68,9 +79,13 @@ final class ModelManagerViewModel {
             try modelManager.deleteModel(name: model.name, kind: model.kind)
             model.isDownloaded = false
             model.localURL = nil
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                logger.error("Failed to save context: \(error)")
+            }
         } catch {
-            print("[ModelManager] Delete failed: \(error)")
+            logger.error("Delete failed: \(error)")
         }
     }
 }
