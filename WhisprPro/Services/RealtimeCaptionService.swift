@@ -143,7 +143,7 @@ final class RealtimeCaptionService {
         // VAD: Skip if audio energy is too low (silence)
         let energy = window.reduce(Float(0)) { $0 + $1 * $1 } / Float(window.count)
         let rms = sqrt(energy)
-        if rms < 0.005 {
+        if rms < 0.001 {
             logger.debug("Skipping silent window (RMS: \(rms))")
             return
         }
@@ -165,11 +165,10 @@ final class RealtimeCaptionService {
             let cleanSegments = result.filter { !Self.isNoise($0.text) }
             let text = cleanSegments.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespaces)
 
-            // Skip empty, duplicate, or very short single-word results
+            // Skip empty or exact duplicates
             let isDuplicate = text == currentText || segments.last?.text == text
-            let isTooShort = text.split(separator: " ").count <= 1 && text.count < 8
 
-            if !text.isEmpty && !isDuplicate && !isTooShort {
+            if !text.isEmpty && !isDuplicate {
                 await MainActor.run {
                     currentText = text
                     segments.append((time: Date(), text: text))
