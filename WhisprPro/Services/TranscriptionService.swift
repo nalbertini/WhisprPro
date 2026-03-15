@@ -85,16 +85,10 @@ actor TranscriptionService {
 
         logger.info("Source: \(sourceURL.path(percentEncoded: false)), exists: \(FileManager.default.fileExists(atPath: sourceURL.path(percentEncoded: false)))")
 
-        if sourceURL.pathExtension.lowercased() == "wav" {
-            // Recording output is already WAV — use directly or copy to temp
-            let tempFile = tempDir.appendingPathComponent("\(transcription.id.uuidString).wav")
-            try FileManager.default.copyItem(at: sourceURL, to: tempFile)
-            wavURL = tempFile
-        } else {
-            let tempFile = tempDir.appendingPathComponent("\(transcription.id.uuidString).wav")
-            try await AudioConverter.convertToWAV(input: sourceURL, output: tempFile)
-            wavURL = tempFile
-        }
+        let tempFile = tempDir.appendingPathComponent("\(transcription.id.uuidString).wav")
+        // Always convert to 16kHz mono int16 PCM — even WAV files may be in wrong format
+        try await AudioConverter.convertToWAV(input: sourceURL, output: tempFile)
+        wavURL = tempFile
 
         let modelPath = modelManager.modelPath(name: transcription.modelName, kind: .whisper)
         logger.info("Model path: \(modelPath.path(percentEncoded: false)), exists: \(FileManager.default.fileExists(atPath: modelPath.path(percentEncoded: false)))")
