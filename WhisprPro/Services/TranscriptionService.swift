@@ -100,6 +100,8 @@ actor TranscriptionService {
         logger.info("Model path: \(modelPath.path(percentEncoded: false)), exists: \(FileManager.default.fileExists(atPath: modelPath.path(percentEncoded: false)))")
         try await whisperBridge.loadModel(path: modelPath)
 
+        let transcribeStart = Date()
+
         let segments = try await whisperBridge.transcribe(
             audioPath: wavURL,
             language: transcription.language,
@@ -163,6 +165,8 @@ actor TranscriptionService {
             }
         }
 
+        transcription.transcribeTime = Date().timeIntervalSince(transcribeStart)
+        transcription.updatedAt = Date()
         transcription.status = .completed
         transcription.progress = 1.0
         do {

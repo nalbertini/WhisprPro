@@ -24,6 +24,9 @@ final class Transcription {
     var diarizationError: String?
     var translateToEnglish: Bool = false
     var timestampOffset: TimeInterval = 0.0
+    var transcribeTime: TimeInterval = 0.0
+    var detectedLanguage: String = ""
+    var updatedAt: Date = Date()
 
     @Relationship(deleteRule: .cascade, inverse: \Segment.transcription)
     var segments: [Segment]

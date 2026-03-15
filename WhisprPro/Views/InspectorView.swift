@@ -22,36 +22,93 @@ struct InspectorView: View {
 
                 Divider()
 
-                // View options
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Display")
-                        .font(.headline)
+                // Model & Language
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Model & Language")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                         .foregroundStyle(.secondary)
 
-                    HStack {
-                        Text("Font Size")
-                        Spacer()
-                        Picker("", selection: $fontSize) {
-                            Text("13").tag(13.0)
-                            Text("15").tag(15.0)
-                            Text("18").tag(18.0)
-                            Text("22").tag(22.0)
-                        }
-                        .pickerStyle(.menu)
-                        .frame(width: 70)
-                    }
-
-                    Toggle("Favorites Only", isOn: $favoritesOnly)
-                    Toggle("Compact Mode", isOn: $compactMode)
+                    InfoRow(icon: "cpu", label: "Model", value: transcription.modelName)
+                    InfoRow(icon: "globe", label: "Language", value: languageDisplayName(transcription.language))
                 }
 
                 Divider()
 
-                // Speakers
+                // Properties
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Properties")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+
+                    InfoRow(icon: "waveform", label: "Audio Duration", value: formatDuration(transcription.duration))
+                    InfoRow(icon: "calendar", label: "Created", value: formatDate(transcription.createdAt))
+                    if transcription.updatedAt != transcription.createdAt {
+                        InfoRow(icon: "calendar.badge.clock", label: "Updated", value: formatDate(transcription.updatedAt))
+                    }
+                }
+
+                // Transcription Details (only when completed)
                 if transcription.status == .completed {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Transcription Details")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+
+                        if transcription.transcribeTime > 0 {
+                            InfoRow(icon: "stopwatch", label: "Transcribe Time", value: formatTranscribeTime(transcription.transcribeTime))
+
+                            let speed = transcription.duration / max(transcription.transcribeTime, 0.01)
+                            InfoRow(icon: "gauge.with.needle", label: "Speed", value: String(format: "%.1fx realtime", speed))
+                        }
+
+                        if !transcription.detectedLanguage.isEmpty {
+                            InfoRow(icon: "globe.americas", label: "Detected Language", value: languageDisplayName(transcription.detectedLanguage))
+                        }
+
+                        InfoRow(icon: "textformat.abc", label: "Characters", value: "\(totalCharacters)")
+                        InfoRow(icon: "text.alignleft", label: "Words", value: "\(totalWords)")
+                        InfoRow(icon: "list.bullet", label: "Segments", value: "\(transcription.segments.count)")
+                    }
+
+                    Divider()
+
+                    // Display options
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Display")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.secondary)
+
+                        HStack {
+                            Text("Font Size")
+                                .font(.body)
+                            Spacer()
+                            Picker("", selection: $fontSize) {
+                                Text("13").tag(13.0)
+                                Text("15").tag(15.0)
+                                Text("18").tag(18.0)
+                                Text("22").tag(22.0)
+                            }
+                            .pickerStyle(.menu)
+                            .frame(width: 70)
+                        }
+
+                        Toggle("Favorites Only", isOn: $favoritesOnly)
+                        Toggle("Compact Mode", isOn: $compactMode)
+                    }
+
+                    Divider()
+
+                    // People
                     VStack(alignment: .leading, spacing: 8) {
                         Text("People")
-                            .font(.headline)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
 
                         if transcription.speakers.isEmpty {
@@ -63,9 +120,7 @@ struct InspectorView: View {
                                 HStack {
                                     ColorPicker("", selection: Binding(
                                         get: { Color(hex: speaker.color) ?? .blue },
-                                        set: { newColor in
-                                            speaker.color = newColor.hexString
-                                        }
+                                        set: { speaker.color = $0.hexString }
                                     ))
                                     .labelsHidden()
                                     .frame(width: 24)
@@ -92,7 +147,8 @@ struct InspectorView: View {
                     // Actions
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Actions")
-                            .font(.headline)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
                             .foregroundStyle(.secondary)
 
                         Button("Remove Fillers") {
@@ -100,19 +156,16 @@ struct InspectorView: View {
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
-                    }
 
-                    Divider()
-
-                    // Timestamp offset
-                    HStack {
-                        Text("Time Offset")
-                            .font(.subheadline)
-                        Spacer()
-                        TextField("0", value: $transcription.timestampOffset, format: .number)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                            .font(.caption)
+                        HStack {
+                            Text("Time Offset")
+                                .font(.body)
+                            Spacer()
+                            TextField("0", value: $transcription.timestampOffset, format: .number)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 60)
+                                .font(.caption)
+                        }
                     }
                 }
 
@@ -122,6 +175,46 @@ struct InspectorView: View {
         }
         .background(.bar)
     }
+
+    // MARK: - Computed
+
+    private var totalCharacters: Int {
+        transcription.segments.reduce(0) { $0 + $1.text.count }
+    }
+
+    private var totalWords: Int {
+        transcription.segments.reduce(0) { $0 + $1.text.split(separator: " ").count }
+    }
+
+    // MARK: - Formatting
+
+    private func formatDuration(_ d: TimeInterval) -> String {
+        let m = Int(d) / 60
+        let s = Int(d) % 60
+        return String(format: "%d:%02d", m, s)
+    }
+
+    private func formatTranscribeTime(_ t: TimeInterval) -> String {
+        if t < 1 { return "< 1s" }
+        let m = Int(t) / 60
+        let s = Int(t) % 60
+        if m > 0 { return String(format: "%d:%02d", m, s) }
+        return String(format: "00:%02d", s)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+
+    private func languageDisplayName(_ code: String) -> String {
+        if code == "auto" { return "Auto Detect" }
+        return Locale.current.localizedString(forLanguageCode: code)?.capitalized ?? code
+    }
+
+    // MARK: - Actions
 
     private func copyTranscript() {
         let segments = transcription.segments.sorted { $0.startTime < $1.startTime }
@@ -144,6 +237,30 @@ struct InspectorView: View {
                 segment.text = cleaned
                 segment.isEdited = true
             }
+        }
+    }
+}
+
+// MARK: - InfoRow
+
+private struct InfoRow: View {
+    let icon: String
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack(alignment: .top) {
+            Image(systemName: icon)
+                .frame(width: 16)
+                .foregroundStyle(.secondary)
+            Text(label)
+                .font(.body)
+                .foregroundStyle(.primary)
+            Spacer()
+            Text(value)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.trailing)
         }
     }
 }
