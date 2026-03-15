@@ -45,6 +45,13 @@ struct WhisprProApp: App {
 
                 Divider()
 
+                Button("Live Captions") {
+                    NotificationCenter.default.post(name: .showLiveCaptions, object: nil)
+                }
+                .keyboardShortcut("l", modifiers: [.command, .shift])
+
+                Divider()
+
                 Button("Toggle Inspector") {
                     NotificationCenter.default.post(name: .toggleInspector, object: nil)
                 }

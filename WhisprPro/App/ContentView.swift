@@ -6,6 +6,7 @@ extension Notification.Name {
     static let importFile = Notification.Name("importFile")
     static let newRecording = Notification.Name("newRecording")
     static let toggleInspector = Notification.Name("toggleInspector")
+    static let showLiveCaptions = Notification.Name("showLiveCaptions")
 }
 
 struct ContentView: View {
@@ -16,6 +17,7 @@ struct ContentView: View {
     @State private var fontSize: Double = 15
     @State private var favoritesOnly = false
     @State private var compactMode = false
+    @State private var showCaptions = false
 
     var body: some View {
         Group {
@@ -117,6 +119,12 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleInspector)) { _ in
             withAnimation { showInspector.toggle() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showLiveCaptions)) { _ in
+            showCaptions = true
+        }
+        .sheet(isPresented: $showCaptions) {
+            RealtimeCaptionView()
         }
     }
 }
