@@ -10,6 +10,7 @@ struct RecordingView: View {
     @State private var systemAudioService = SystemAudioService()
     @State private var systemAudioError: String?
     @State private var isStoppingSystemAudio = false
+    @State private var showLiveCaptions = false
 
     var body: some View {
         VStack(spacing: 24) {
@@ -30,9 +31,22 @@ struct RecordingView: View {
             } else {
                 micContent
             }
+
+            Divider()
+
+            Button {
+                showLiveCaptions = true
+            } label: {
+                Label("Live Captions", systemImage: "captions.bubble")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
         }
         .padding(32)
-        .frame(width: 400, height: 400)
+        .frame(width: 400, height: 450)
+        .sheet(isPresented: $showLiveCaptions) {
+            RealtimeCaptionView()
+        }
     }
 
     // MARK: - Microphone UI

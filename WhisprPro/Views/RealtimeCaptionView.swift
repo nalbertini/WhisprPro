@@ -3,6 +3,7 @@ import SwiftUI
 struct RealtimeCaptionView: View {
     @State private var captionService = RealtimeCaptionService()
     @State private var selectedModel = "tiny"
+    @State private var selectedLanguage = "auto"
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
@@ -27,6 +28,17 @@ struct RealtimeCaptionView: View {
                     }
                     .pickerStyle(.menu)
                     .frame(width: 80)
+
+                    Picker("Lang", selection: $selectedLanguage) {
+                        Text("Auto").tag("auto")
+                        Text("IT").tag("it")
+                        Text("EN").tag("en")
+                        Text("ES").tag("es")
+                        Text("FR").tag("fr")
+                        Text("DE").tag("de")
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 70)
                 }
 
                 Button(captionService.isActive ? "Stop" : "Start") {
@@ -140,6 +152,7 @@ struct RealtimeCaptionView: View {
             errorMessage = nil
             Task {
                 do {
+                    captionService.language = selectedLanguage
                     try await captionService.start(modelName: selectedModel)
                 } catch {
                     errorMessage = error.localizedDescription

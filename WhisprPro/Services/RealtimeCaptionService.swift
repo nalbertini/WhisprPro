@@ -22,6 +22,27 @@ final class RealtimeCaptionService {
     private let windowDuration: Double = 5.0
     private let processingInterval: Double = 3.0
 
+    var language: String = "auto"
+
+    /// Patterns that indicate noise/silence, not real speech
+    private static let noisePatterns: [String] = [
+        "[MUSIC", "[BLANK_AUDIO]", "[SILENCE]", "(silence)", "(music)",
+        "[laughter]", "[applause]", "[noise]", "[звук", "[музыка",
+        "[놀", "[音楽",
+    ]
+
+    private static func isNoise(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty || trimmed.count < 3 { return true }
+        // Check if text is mostly brackets/tags
+        if trimmed.hasPrefix("[") && trimmed.hasSuffix("]") { return true }
+        if trimmed.hasPrefix("(") && trimmed.hasSuffix(")") { return true }
+        for pattern in noisePatterns {
+            if trimmed.localizedCaseInsensitiveContains(pattern) { return true }
+        }
+        return false
+    }
+
     func start(modelName: String = "tiny") async throws {
         // Load model
         let modelPath = modelManager.modelPath(name: modelName, kind: .whisper)
@@ -126,11 +147,13 @@ final class RealtimeCaptionService {
 
             let result = try await whisperBridge.transcribe(
                 audioPath: tempURL,
-                language: "auto",
+                language: language,
                 translate: false
             ) { _ in }
 
-            let text = result.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+            // Filter out noise/silence segments
+            let cleanSegments = result.filter { !Self.isNoise($0.text) }
+            let text = cleanSegments.map(\.text).joined(separator: " ").trimmingCharacters(in: .whitespaces)
 
             if !text.isEmpty && text != currentText {
                 await MainActor.run {
