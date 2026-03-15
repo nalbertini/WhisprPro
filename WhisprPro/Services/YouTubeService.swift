@@ -85,47 +85,55 @@ actor YouTubeService {
         logger.info("Downloading audio from: \(url)")
         progress("Fetching video info...")
 
-        // Download audio only as WAV
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: ytDlp)
-        process.arguments = [
-            "-x",                           // Extract audio
-            "--audio-format", "wav",         // Convert to WAV
-            "--audio-quality", "0",          // Best quality
-            "--no-playlist",                 // Single video only
-            "--no-warnings",
-            "--progress",
-            "-o", outputTemplate,
-            url
-        ]
+        // Run yt-dlp on background thread with async continuation
+        let exitCode = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int32, Error>) in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let proc = Process()
+                    proc.executableURL = URL(fileURLWithPath: ytDlp)
+                    proc.arguments = [
+                        "-x",
+                        "--audio-format", "wav",
+                        "--audio-quality", "0",
+                        "--no-playlist",
+                        "--no-warnings",
+                        "--newline",
+                        "-o", outputTemplate,
+                        url
+                    ]
 
-        let stdoutPipe = Pipe()
-        let stderrPipe = Pipe()
-        process.standardOutput = stdoutPipe
-        process.standardError = stderrPipe
+                    let outPipe = Pipe()
+                    let errPipe = Pipe()
+                    proc.standardOutput = outPipe
+                    proc.standardError = errPipe
 
-        // Read progress from stderr
-        stderrPipe.fileHandleForReading.readabilityHandler = { handle in
-            let data = handle.availableData
-            if let line = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !line.isEmpty {
-                if line.contains("[download]") && line.contains("%") {
-                    progress(line)
-                } else if line.contains("[ExtractAudio]") {
-                    progress("Converting to audio...")
+                    outPipe.fileHandleForReading.readabilityHandler = { handle in
+                        let data = handle.availableData
+                        guard !data.isEmpty,
+                              let line = String(data: data, encoding: .utf8)?
+                                .trimmingCharacters(in: .whitespacesAndNewlines),
+                              !line.isEmpty else { return }
+                        if line.contains("[download]") && line.contains("%") {
+                            progress(line)
+                        } else if line.contains("[ExtractAudio]") {
+                            progress("Converting to audio...")
+                        }
+                    }
+
+                    proc.terminationHandler = { p in
+                        outPipe.fileHandleForReading.readabilityHandler = nil
+                        continuation.resume(returning: p.terminationStatus)
+                    }
+
+                    try proc.run()
+                } catch {
+                    continuation.resume(throwing: error)
                 }
             }
         }
 
-        try process.run()
-        process.waitUntilExit()
-
-        stderrPipe.fileHandleForReading.readabilityHandler = nil
-
-        guard process.terminationStatus == 0 else {
-            let errorData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMsg = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-            throw YouTubeError.downloadFailed(errorMsg)
+        guard exitCode == 0 else {
+            throw YouTubeError.downloadFailed("yt-dlp exited with code \(exitCode)")
         }
 
         // Find the downloaded file
