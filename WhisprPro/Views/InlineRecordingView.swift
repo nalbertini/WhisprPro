@@ -69,6 +69,16 @@ struct InlineRecordingView: View {
                     WaveformView(level: recordingService.audioLevel)
                         .frame(height: 40)
                         .frame(width: 300)
+
+                    // Show active mic name
+                    HStack(spacing: 4) {
+                        Image(systemName: "mic.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                        Text(activeMicName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 if recordSystemAudio && systemAudioService.isRecording {
@@ -207,6 +217,16 @@ struct InlineRecordingView: View {
             _ = try? recordingService.stopRecording()
         }
         viewModel.isRecordingMode = false
+    }
+
+    private var activeMicName: String {
+        if let id = selectedDeviceID {
+            let devices = RecordingService().availableInputDevices()
+            return devices.first(where: { $0.uniqueID == id })?.localizedName ?? "Unknown"
+        }
+        // Get default input device name
+        let devices = RecordingService().availableInputDevices()
+        return devices.first?.localizedName ?? "Default Microphone"
     }
 
     private func formatTime(_ time: TimeInterval) -> String {

@@ -114,6 +114,15 @@ final class RecordingService {
 
             guard convertedBuffer.frameLength > 0 else { return }
 
+            // Apply gain boost to improve low-volume recordings
+            if let data = convertedBuffer.floatChannelData?[0] {
+                let count = Int(convertedBuffer.frameLength)
+                let gain: Float = 2.5  // 2.5x volume boost
+                for i in 0..<count {
+                    data[i] = min(max(data[i] * gain, -1.0), 1.0)  // Clamp to [-1, 1]
+                }
+            }
+
             do {
                 try audioFile.write(from: convertedBuffer)
             } catch {

@@ -1,0 +1,575 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Import File" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Importa File" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Datei importieren" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Importer un fichier" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Importar archivo" } }
+      }
+    },
+    "Record" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Registra" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufnehmen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Enregistrer" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Grabar" } }
+      }
+    },
+    "YouTube" : {},
+    "Search transcript..." : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca nella trascrizione..." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkript durchsuchen..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher dans la transcription..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar en la transcripción..." } }
+      }
+    },
+    "Export" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esporta" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Exportieren" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Exporter" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Exportar" } }
+      }
+    },
+    "Share" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Condividi" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Teilen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Partager" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Compartir" } }
+      }
+    },
+    "Copy Transcript" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Copia Trascrizione" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkript kopieren" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Copier la transcription" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Copiar transcripción" } }
+      }
+    },
+    "Model & Language" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modello e Lingua" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell & Sprache" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modèle et langue" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modelo e idioma" } }
+      }
+    },
+    "Properties" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Proprietà" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eigenschaften" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Propriétés" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Propiedades" } }
+      }
+    },
+    "Transcription Details" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dettagli Trascrizione" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkriptionsdetails" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Détails de la transcription" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detalles de la transcripción" } }
+      }
+    },
+    "Display" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Visualizzazione" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Anzeige" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Affichage" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Visualización" } }
+      }
+    },
+    "Font Size" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dimensione Font" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schriftgröße" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Taille de police" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tamaño de fuente" } }
+      }
+    },
+    "Favorites Only" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Solo Preferiti" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur Favoriten" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Favoris uniquement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo favoritos" } }
+      }
+    },
+    "Compact Mode" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modalità Compatta" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kompaktmodus" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mode compact" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modo compacto" } }
+      }
+    },
+    "Group Segments" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Raggruppa Segmenti" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Segmente gruppieren" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Grouper les segments" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agrupar segmentos" } }
+      }
+    },
+    "People" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Persone" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Personen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Personnes" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Personas" } }
+      }
+    },
+    "No speakers detected" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun parlante rilevato" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Sprecher erkannt" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucun intervenant détecté" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se detectaron hablantes" } }
+      }
+    },
+    "Auto Detect Speakers" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rileva Parlanti" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprecher erkennen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Détecter les intervenants" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detectar hablantes" } }
+      }
+    },
+    "Add Speaker" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi Parlante" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprecher hinzufügen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ajouter un intervenant" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir hablante" } }
+      }
+    },
+    "Actions" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Azioni" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktionen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Actions" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Acciones" } }
+      }
+    },
+    "Remove Fillers" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi Riempitivi" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Füllwörter entfernen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer les hésitations" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar muletillas" } }
+      }
+    },
+    "Time Offset" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Offset Tempo" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeitversatz" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Décalage temporel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desfase temporal" } }
+      }
+    },
+    "New Recording" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nuova Registrazione" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neue Aufnahme" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Nouvel enregistrement" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nueva grabación" } }
+      }
+    },
+    "Microphone" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Microfono" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mikrofon" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Microphone" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Micrófono" } }
+      }
+    },
+    "System Audio" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Audio di Sistema" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Systemaudio" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Audio système" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Audio del sistema" } }
+      }
+    },
+    "Stop & Transcribe" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ferma e Trascrivi" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stopp & Transkribieren" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter et transcrire" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener y transcribir" } }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Annulla" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abbrechen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Annuler" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancelar" } }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Indietro" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zurück" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retour" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Atrás" } }
+      }
+    },
+    "Pause" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Pausa" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pause" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pause" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pausa" } }
+      }
+    },
+    "Resume" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riprendi" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fortsetzen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Reprendre" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reanudar" } }
+      }
+    },
+    "Live Captions" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sottotitoli Live" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Live-Untertitel" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sous-titres en direct" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Subtítulos en vivo" } }
+      }
+    },
+    "Transcribing..." : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Trascrizione in corso..." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkribieren..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Transcription en cours..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Transcribiendo..." } }
+      }
+    },
+    "Identifying speakers..." : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Identificazione parlanti..." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprecher werden erkannt..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Identification des intervenants..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Identificando hablantes..." } }
+      }
+    },
+    "Transcription failed" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Trascrizione fallita" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkription fehlgeschlagen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Échec de la transcription" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Transcripción fallida" } }
+      }
+    },
+    "Select or import a transcription" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Seleziona o importa una trascrizione" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wähle oder importiere eine Transkription" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Sélectionner ou importer une transcription" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Selecciona o importa una transcripción" } }
+      }
+    },
+    "Waiting..." : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In attesa..." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warten..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En attente..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando..." } }
+      }
+    },
+    "Whisper Models" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modelli Whisper" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Whisper-Modelle" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modèles Whisper" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modelos Whisper" } }
+      }
+    },
+    "Speaker Diarization" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riconoscimento Parlanti" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprechererkennung" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Identification des intervenants" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reconocimiento de hablantes" } }
+      }
+    },
+    "Download" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scarica" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Herunterladen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Télécharger" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descargar" } }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elimina" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Löschen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Supprimer" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar" } }
+      }
+    },
+    "Models" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modelli" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modelle" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modèles" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modelos" } }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Generale" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Allgemein" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Général" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "General" } }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impostazioni" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einstellungen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Paramètres" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Configuración" } }
+      }
+    },
+    "Audio Duration" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Durata Audio" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Audiodauer" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Durée audio" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Duración del audio" } }
+      }
+    },
+    "Created" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Creato" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erstellt" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Créé" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Creado" } }
+      }
+    },
+    "Updated" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornato" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisiert" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mis à jour" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizado" } }
+      }
+    },
+    "Transcribe Time" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tempo Trascrizione" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkriptionszeit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Temps de transcription" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tiempo de transcripción" } }
+      }
+    },
+    "Speed" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Velocità" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Geschwindigkeit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Vitesse" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Velocidad" } }
+      }
+    },
+    "Characters" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Caratteri" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeichen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Caractères" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Caracteres" } }
+      }
+    },
+    "Words" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Parole" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wörter" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mots" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Palabras" } }
+      }
+    },
+    "Segments" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Segmenti" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Segmente" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Segments" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Segmentos" } }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modello" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modèle" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modelo" } }
+      }
+    },
+    "Language" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lingua" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprache" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Langue" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Idioma" } }
+      }
+    },
+    "YouTube Transcription" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Trascrizione YouTube" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "YouTube-Transkription" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Transcription YouTube" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Transcripción de YouTube" } }
+      }
+    },
+    "Paste a YouTube URL:" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Incolla un URL YouTube:" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "YouTube-URL einfügen:" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Collez une URL YouTube :" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pega una URL de YouTube:" } }
+      }
+    },
+    "Download & Transcribe" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Scarica e Trascrivi" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Herunterladen & Transkribieren" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Télécharger et transcrire" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Descargar y transcribir" } }
+      }
+    },
+    "Paste" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Incolla" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einfügen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Coller" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pegar" } }
+      }
+    },
+    "Import Custom Model..." : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Importa Modello Personalizzato..." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eigenes Modell importieren..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Importer un modèle personnalisé..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Importar modelo personalizado..." } }
+      }
+    },
+    "Default Language" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lingua Predefinita" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Standardsprache" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Langue par défaut" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Idioma predeterminado" } }
+      }
+    },
+    "Default Model" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modello Predefinito" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Standardmodell" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Modèle par défaut" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modelo predeterminado" } }
+      }
+    },
+    "Audio Input" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ingresso Audio" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Audioeingang" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Entrée audio" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Entrada de audio" } }
+      }
+    },
+    "Default Format" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Formato Predefinito" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Standardformat" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Format par défaut" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Formato predeterminado" } }
+      }
+    },
+    "Include timestamps" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Includi timestamp" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeitstempel einschließen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Inclure les horodatages" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Incluir marcas de tiempo" } }
+      }
+    },
+    "Include speaker labels" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Includi nomi parlanti" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprecherbezeichnungen einschließen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Inclure les noms des intervenants" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Incluir nombres de hablantes" } }
+      }
+    },
+    "Copy All" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Copia Tutto" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles kopieren" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tout copier" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Copiar todo" } }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Start" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Démarrer" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar" } }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ferma" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stopp" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Arrêter" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener" } }
+      }
+    },
+    "Listening..." : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In ascolto..." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zuhören..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Écoute en cours..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Escuchando..." } }
+      }
+    },
+    "Open WhisprPro" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apri WhisprPro" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "WhisprPro öffnen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ouvrir WhisprPro" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir WhisprPro" } }
+      }
+    },
+    "Quit WhisprPro" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esci da WhisprPro" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "WhisprPro beenden" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Quitter WhisprPro" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salir de WhisprPro" } }
+      }
+    },
+    "Recent" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Recenti" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zuletzt" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Récents" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Recientes" } }
+      }
+    },
+    "No transcriptions yet" : {
+      "localizations" : {
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna trascrizione" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch keine Transkriptionen" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune transcription" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin transcripciones aún" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}
