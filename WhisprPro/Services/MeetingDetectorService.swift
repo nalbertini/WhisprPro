@@ -110,7 +110,8 @@ final class MeetingDetectorService {
                bundleId.contains("com.apple.Safari") ||
                bundleId.contains("org.mozilla.firefox") ||
                bundleId.contains("com.brave.Browser") ||
-               bundleId.contains("com.microsoft.edgemac") {
+               bundleId.contains("com.microsoft.edgemac") ||
+               bundleId.contains("company.thebrowser.Browser") {  // Arc
 
                 // Check window titles for meeting patterns
                 if let appName = app.localizedName {
