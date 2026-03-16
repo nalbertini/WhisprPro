@@ -19,11 +19,12 @@ struct InlineRecordingView: View {
     private let textQuaternary = Color(red: 0.388, green: 0.388, blue: 0.400)  // #636366
     private let accentRed = Color(red: 1.0, green: 0.271, blue: 0.227)         // #FF453A
     private let accentBlue = Color(red: 0.039, green: 0.518, blue: 1.0)        // #0A84FF
+    private let accentGreen = Color(red: 0.188, green: 0.820, blue: 0.345)    // #30D158
     private let cardBackground = Color(red: 0.220, green: 0.220, blue: 0.228)  // #38383A
     private let sidebarBackground = Color(red: 0.173, green: 0.173, blue: 0.180) // #2C2C2E
 
     private var isRecording: Bool {
-        recordingService.isRecording || systemAudioService.isRecording || mixedAudioService.isRecording
+        recordingService.isRecording
     }
 
     init(viewModel: TranscriptionViewModel, playerViewModel: AudioPlayerViewModel) {
@@ -45,11 +46,10 @@ struct InlineRecordingView: View {
                 // Source picker
                 Picker("", selection: $sourceMode) {
                     Text("Microphone").tag(0)
-                    Text("System Audio").tag(1)
                     Text("Meeting").tag(2)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 360)
+                .frame(width: 280)
                 .disabled(isRecording)
 
                 // Record button
@@ -98,27 +98,14 @@ struct InlineRecordingView: View {
                     }
                 }
 
-                if sourceMode == 1 && systemAudioService.isRecording {
+                if sourceMode == 2 && isRecording {
                     HStack(spacing: 6) {
-                        Image(systemName: "speaker.wave.2")
-                            .foregroundStyle(.orange)
-                        Text("Capturing system audio...")
+                        Image(systemName: "person.2.fill")
+                            .foregroundStyle(accentGreen)
+                        Text("Meeting mode — place Mac near speakers for best results")
                             .foregroundStyle(textTertiary)
                     }
-                }
-
-                if sourceMode == 2 && mixedAudioService.isRecording {
-                    HStack(spacing: 8) {
-                        Image(systemName: "mic.fill")
-                            .foregroundStyle(accentRed)
-                        Text("+")
-                            .foregroundStyle(textQuaternary)
-                        Image(systemName: "speaker.wave.2")
-                            .foregroundStyle(.orange)
-                        Text("Recording both sides")
-                            .foregroundStyle(textTertiary)
-                    }
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                 }
 
                 // Device selector (mic only)
@@ -244,11 +231,7 @@ struct InlineRecordingView: View {
     }
 
     private var elapsedTimeForCurrentMode: TimeInterval {
-        switch sourceMode {
-        case 1: return systemAudioService.elapsedTime
-        case 2: return mixedAudioService.elapsedTime
-        default: return recordingService.elapsedTime
-        }
+        recordingService.elapsedTime
     }
 
     private func toggleRecording() {
@@ -261,29 +244,11 @@ struct InlineRecordingView: View {
 
     private func startRecording() {
         errorMessage = nil
-        switch sourceMode {
-        case 1:
-            Task {
-                do {
-                    try await systemAudioService.startRecording()
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
-            }
-        case 2:
-            Task {
-                do {
-                    try await mixedAudioService.startRecording()
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
-            }
-        default:
-            do {
-                try recordingService.startRecording(deviceID: selectedDeviceID)
-            } catch {
-                errorMessage = error.localizedDescription
-            }
+        // Both Microphone and Meeting use the mic — Meeting just has higher gain
+        do {
+            try recordingService.startRecording(deviceID: selectedDeviceID)
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -291,14 +256,7 @@ struct InlineRecordingView: View {
         Task {
             do {
                 let url: URL
-                switch sourceMode {
-                case 1:
-                    url = try await systemAudioService.stopRecording()
-                case 2:
-                    url = try await mixedAudioService.stopRecording()
-                default:
-                    url = try recordingService.stopRecording()
-                }
+                url = try recordingService.stopRecording()
                 viewModel.isRecordingMode = false
                 await viewModel.importFile(url: url)
             } catch {
@@ -308,14 +266,7 @@ struct InlineRecordingView: View {
     }
 
     private func cancelRecording() {
-        switch sourceMode {
-        case 1:
-            Task { _ = try? await systemAudioService.stopRecording() }
-        case 2:
-            Task { _ = try? await mixedAudioService.stopRecording() }
-        default:
-            _ = try? recordingService.stopRecording()
-        }
+        _ = try? recordingService.stopRecording()
         viewModel.isRecordingMode = false
     }
 
