@@ -32,6 +32,9 @@
     "%lld%%" : {
 
     },
+    "+" : {
+
+    },
     "⌘O" : {
 
     },
@@ -1250,6 +1253,9 @@
     "medium" : {
 
     },
+    "Meeting" : {
+
+    },
     "Merge with Next" : {
       "localizations" : {
         "de" : {
@@ -1899,6 +1905,9 @@
       }
     },
     "Recording" : {
+
+    },
+    "Recording both sides" : {
 
     },
     "Remove Fillers" : {

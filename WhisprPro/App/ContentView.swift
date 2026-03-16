@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var groupSegments = true
     @State private var showCaptions = false
     @State private var showYouTubeImport = false
+    @State private var meetingDetector = MeetingDetectorService()
 
     // Design tokens
     private let textMuted = Color(red: 0.290, green: 0.290, blue: 0.306)       // #4A4A4E
@@ -40,6 +41,14 @@ struct ContentView: View {
         .onAppear {
             if viewModel == nil {
                 viewModel = TranscriptionViewModel(modelContext: modelContext)
+            }
+            meetingDetector.startMonitoring()
+        }
+        .overlay(alignment: .top) {
+            if let meeting = meetingDetector.detectedMeeting {
+                meetingBanner(meeting: meeting)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.3), value: meetingDetector.detectedMeeting)
             }
         }
     }
@@ -251,5 +260,57 @@ struct ContentView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func meetingBanner(meeting: MeetingDetectorService.DetectedMeeting) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: meeting.icon)
+                .font(.system(size: 16))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(Color(red: 0.039, green: 0.518, blue: 1.0))
+                .cornerRadius(8)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(meeting.service) detected")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.961, green: 0.961, blue: 0.969))
+                Text("Record both sides of the conversation?")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
+            }
+
+            Spacer()
+
+            Button {
+                viewModel?.isRecordingMode = true
+                meetingDetector.dismissCurrentMeeting()
+            } label: {
+                Text("Record Meeting")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(Color(red: 1.0, green: 0.271, blue: 0.227))
+                    .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                meetingDetector.dismissCurrentMeeting()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(Color(red: 0.173, green: 0.173, blue: 0.180))
+        .cornerRadius(10)
+        .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
     }
 }
