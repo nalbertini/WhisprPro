@@ -7,7 +7,8 @@ struct InlineRecordingView: View {
 
     @State private var recordingService = RecordingService()
     @State private var systemAudioService = SystemAudioService()
-    @State private var recordSystemAudio = false
+    @State private var mixedAudioService = MixedAudioService()
+    @State private var sourceMode = 0  // 0=mic, 1=system, 2=meeting
     @State private var selectedDeviceID: String?
     @State private var errorMessage: String?
     @State private var showLiveCaptions = false
@@ -22,7 +23,7 @@ struct InlineRecordingView: View {
     private let sidebarBackground = Color(red: 0.173, green: 0.173, blue: 0.180) // #2C2C2E
 
     private var isRecording: Bool {
-        recordingService.isRecording || systemAudioService.isRecording
+        recordingService.isRecording || systemAudioService.isRecording || mixedAudioService.isRecording
     }
 
     var body: some View {
@@ -36,12 +37,13 @@ struct InlineRecordingView: View {
                     .foregroundStyle(textPrimary)
 
                 // Source picker
-                Picker("", selection: $recordSystemAudio) {
-                    Text("Microphone").tag(false)
-                    Text("System Audio").tag(true)
+                Picker("", selection: $sourceMode) {
+                    Text("Microphone").tag(0)
+                    Text("System Audio").tag(1)
+                    Text("Meeting").tag(2)
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 280)
+                .frame(width: 360)
                 .disabled(isRecording)
 
                 // Record button
@@ -69,12 +71,12 @@ struct InlineRecordingView: View {
                 .buttonStyle(.plain)
 
                 // Timer
-                Text(formatTime(recordSystemAudio ? systemAudioService.elapsedTime : recordingService.elapsedTime))
+                Text(formatTime(elapsedTimeForCurrentMode))
                     .font(.system(size: 52, weight: .ultraLight, design: .monospaced))
                     .foregroundStyle(isRecording ? textPrimary : textQuaternary)
 
-                // Waveform (mic only)
-                if !recordSystemAudio && recordingService.isRecording {
+                // Waveform / status indicators
+                if sourceMode == 0 && recordingService.isRecording {
                     WaveformView(level: recordingService.audioLevel)
                         .frame(height: 40)
                         .frame(width: 300)
@@ -90,7 +92,7 @@ struct InlineRecordingView: View {
                     }
                 }
 
-                if recordSystemAudio && systemAudioService.isRecording {
+                if sourceMode == 1 && systemAudioService.isRecording {
                     HStack(spacing: 6) {
                         Image(systemName: "speaker.wave.2")
                             .foregroundStyle(.orange)
@@ -99,8 +101,22 @@ struct InlineRecordingView: View {
                     }
                 }
 
+                if sourceMode == 2 && mixedAudioService.isRecording {
+                    HStack(spacing: 8) {
+                        Image(systemName: "mic.fill")
+                            .foregroundStyle(accentRed)
+                        Text("+")
+                            .foregroundStyle(textQuaternary)
+                        Image(systemName: "speaker.wave.2")
+                            .foregroundStyle(.orange)
+                        Text("Recording both sides")
+                            .foregroundStyle(textTertiary)
+                    }
+                    .font(.system(size: 12))
+                }
+
                 // Device selector (mic only)
-                if !recordSystemAudio && !isRecording {
+                if sourceMode == 0 && !isRecording {
                     let devices = RecordingService().availableInputDevices()
                     if !devices.isEmpty {
                         Picker("Input Device", selection: $selectedDeviceID) {
@@ -117,7 +133,7 @@ struct InlineRecordingView: View {
                 HStack(spacing: 12) {
                     if isRecording {
                         // Pause (mic only)
-                        if !recordSystemAudio {
+                        if sourceMode == 0 {
                             Button {
                                 if recordingService.isPaused {
                                     recordingService.resume()
@@ -201,6 +217,14 @@ struct InlineRecordingView: View {
         }
     }
 
+    private var elapsedTimeForCurrentMode: TimeInterval {
+        switch sourceMode {
+        case 1: return systemAudioService.elapsedTime
+        case 2: return mixedAudioService.elapsedTime
+        default: return recordingService.elapsedTime
+        }
+    }
+
     private func toggleRecording() {
         if isRecording {
             stopAndTranscribe()
@@ -211,7 +235,8 @@ struct InlineRecordingView: View {
 
     private func startRecording() {
         errorMessage = nil
-        if recordSystemAudio {
+        switch sourceMode {
+        case 1:
             Task {
                 do {
                     try await systemAudioService.startRecording()
@@ -219,7 +244,15 @@ struct InlineRecordingView: View {
                     errorMessage = error.localizedDescription
                 }
             }
-        } else {
+        case 2:
+            Task {
+                do {
+                    try await mixedAudioService.startRecording()
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+            }
+        default:
             do {
                 try recordingService.startRecording(deviceID: selectedDeviceID)
             } catch {
@@ -232,9 +265,12 @@ struct InlineRecordingView: View {
         Task {
             do {
                 let url: URL
-                if recordSystemAudio {
+                switch sourceMode {
+                case 1:
                     url = try await systemAudioService.stopRecording()
-                } else {
+                case 2:
+                    url = try await mixedAudioService.stopRecording()
+                default:
                     url = try recordingService.stopRecording()
                 }
                 viewModel.isRecordingMode = false
@@ -246,9 +282,12 @@ struct InlineRecordingView: View {
     }
 
     private func cancelRecording() {
-        if recordSystemAudio {
+        switch sourceMode {
+        case 1:
             Task { _ = try? await systemAudioService.stopRecording() }
-        } else {
+        case 2:
+            Task { _ = try? await mixedAudioService.stopRecording() }
+        default:
             _ = try? recordingService.stopRecording()
         }
         viewModel.isRecordingMode = false

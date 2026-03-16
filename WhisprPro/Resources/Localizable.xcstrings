@@ -32,6 +32,12 @@
     "%lld%%" : {
 
     },
+    "⌘O" : {
+
+    },
+    "⌘R" : {
+
+    },
     "0" : {
 
     },
@@ -50,7 +56,11 @@
     "22" : {
 
     },
+    "Action" : {
+
+    },
     "Actions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -106,7 +116,13 @@
         }
       }
     },
+    "AI Assistant" : {
+
+    },
     "Arabic" : {
+
+    },
+    "Ask a question about the transcript..." : {
 
     },
     "Assign Speaker" : {
@@ -325,7 +341,14 @@
     "Chinese" : {
 
     },
+    "Claude CLI not found" : {
+
+    },
+    "Close" : {
+
+    },
     "Compact Mode" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -352,6 +375,9 @@
           }
         }
       }
+    },
+    "Copy" : {
+
     },
     "Copy All" : {
       "localizations" : {
@@ -621,6 +647,7 @@
 
     },
     "Display" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -704,10 +731,16 @@
         }
       }
     },
+    "Drag audio or video files here, or use the buttons below" : {
+
+    },
     "Dutch" : {
 
     },
     "English" : {
+
+    },
+    "Enter your prompt..." : {
 
     },
     "Español" : {
@@ -742,6 +775,7 @@
       }
     },
     "Favorites Only" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -863,6 +897,7 @@
       }
     },
     "Group Segments" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -926,6 +961,9 @@
           }
         }
       }
+    },
+    "Import" : {
+
     },
     "Import Custom Model..." : {
       "localizations" : {
@@ -1297,6 +1335,7 @@
       }
     },
     "Model & Language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1463,6 +1502,9 @@
           }
         }
       }
+    },
+    "No Transcription Selected" : {
+
     },
     "No transcriptions yet" : {
       "localizations" : {
@@ -1671,6 +1713,7 @@
 
     },
     "People" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1707,6 +1750,9 @@
     "Portuguese" : {
 
     },
+    "Powered by Claude CLI" : {
+
+    },
     "Press Start to begin live transcription" : {
       "localizations" : {
         "de" : {
@@ -1735,7 +1781,11 @@
         }
       }
     },
+    "Processing..." : {
+
+    },
     "Properties" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1879,6 +1929,9 @@
         }
       }
     },
+    "Result" : {
+
+    },
     "Resume" : {
       "localizations" : {
         "de" : {
@@ -1906,6 +1959,9 @@
           }
         }
       }
+    },
+    "Run with Claude" : {
+
     },
     "Russian" : {
 
@@ -1995,7 +2051,7 @@
         }
       }
     },
-    "Select a transcription or start recording" : {
+    "Select an action and click Run" : {
 
     },
     "Select or import a transcription" : {
@@ -2128,7 +2184,6 @@
 
     },
     "Speed" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -2337,6 +2392,9 @@
     "System Default" : {
 
     },
+    "Target Language" : {
+
+    },
     "Text" : {
 
     },
@@ -2516,6 +2574,7 @@
       }
     },
     "Transcription Details" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

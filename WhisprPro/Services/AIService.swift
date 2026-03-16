@@ -18,6 +18,7 @@ actor AIService {
         case extractKeyPoints = "Extract Key Points"
         case generateTitle = "Generate Title"
         case custom = "Custom Prompt"
+        case meetingNotes = "Meeting Notes"
     }
 
     /// Find Claude CLI path
@@ -62,6 +63,17 @@ actor AIService {
             systemPrompt = "Generate a concise, descriptive title for the following transcript. Output only the title, nothing else."
         case .custom:
             systemPrompt = customPrompt
+        case .meetingNotes:
+            systemPrompt = """
+            Generate structured meeting notes from the following transcript. Include:
+            - **Meeting Title** (infer from context)
+            - **Key Discussion Points** (bullet list)
+            - **Decisions Made** (if any)
+            - **Action Items** (who does what, if identifiable)
+            - **Summary** (2-3 sentences)
+
+            Output in Markdown format. Be concise and professional.
+            """
         }
 
         let fullPrompt = "\(systemPrompt)\n\n---\nTRANSCRIPT:\n\(transcript)\n---"
