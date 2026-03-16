@@ -8,7 +8,7 @@ struct InlineRecordingView: View {
     @State private var recordingService = RecordingService()
     @State private var systemAudioService = SystemAudioService()
     @State private var mixedAudioService = MixedAudioService()
-    @State private var sourceMode = 0  // 0=mic, 1=system, 2=meeting
+    @State private var sourceMode: Int
     @State private var selectedDeviceID: String?
     @State private var errorMessage: String?
     @State private var showLiveCaptions = false
@@ -24,6 +24,12 @@ struct InlineRecordingView: View {
 
     private var isRecording: Bool {
         recordingService.isRecording || systemAudioService.isRecording || mixedAudioService.isRecording
+    }
+
+    init(viewModel: TranscriptionViewModel, playerViewModel: AudioPlayerViewModel) {
+        self.viewModel = viewModel
+        self.playerViewModel = playerViewModel
+        self._sourceMode = State(initialValue: viewModel.recordingSourceMode)
     }
 
     var body: some View {

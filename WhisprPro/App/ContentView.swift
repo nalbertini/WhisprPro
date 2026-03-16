@@ -86,11 +86,14 @@ struct ContentView: View {
             } else {
                 HomeView(
                     onImport: { viewModel.showFileImporter = true },
-                    onRecord: { viewModel.isRecordingMode = true },
+                    onRecord: {
+                        viewModel.recordingSourceMode = 0
+                        viewModel.isRecordingMode = true
+                    },
                     onYouTube: { showYouTubeImport = true },
                     onMeeting: {
+                        viewModel.recordingSourceMode = 2
                         viewModel.isRecordingMode = true
-                        // Set to meeting mode - sourceMode = 2
                     },
                     onLiveCaptions: { showCaptions = true },
                     onSelectTranscription: { transcription in

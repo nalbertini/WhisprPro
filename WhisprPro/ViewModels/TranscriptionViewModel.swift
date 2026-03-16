@@ -12,6 +12,7 @@ final class TranscriptionViewModel {
     var showRecordingSheet = false
     var showFileImporter = false
     var isRecordingMode = false
+    var recordingSourceMode = 0  // 0=mic, 1=system, 2=meeting
 
     private let modelContext: ModelContext
     private(set) var transcriptionService: TranscriptionService

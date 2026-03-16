@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "·" : {
+
+    },
     "/ %@" : {
 
     },
@@ -20,6 +23,9 @@
         }
       }
     },
+    "%@ detected" : {
+
+    },
     "%lld" : {
 
     },
@@ -29,16 +35,13 @@
     "%lld segments" : {
 
     },
+    "%lld speakers" : {
+
+    },
     "%lld%%" : {
 
     },
     "+" : {
-
-    },
-    "⌘O" : {
-
-    },
-    "⌘R" : {
 
     },
     "0" : {
@@ -734,7 +737,7 @@
         }
       }
     },
-    "Drag audio or video files here, or use the buttons below" : {
+    "Drop audio or video files anywhere to transcribe" : {
 
     },
     "Dutch" : {
@@ -964,9 +967,6 @@
           }
         }
       }
-    },
-    "Import" : {
-
     },
     "Import Custom Model..." : {
       "localizations" : {
@@ -1509,9 +1509,6 @@
         }
       }
     },
-    "No Transcription Selected" : {
-
-    },
     "No transcriptions yet" : {
       "localizations" : {
         "de" : {
@@ -1876,6 +1873,9 @@
         }
       }
     },
+    "RECENT TRANSCRIPTIONS" : {
+
+    },
     "Record" : {
       "localizations" : {
         "de" : {
@@ -1903,6 +1903,12 @@
           }
         }
       }
+    },
+    "Record both sides of the conversation?" : {
+
+    },
+    "Record Meeting" : {
+
     },
     "Recording" : {
 
@@ -2737,6 +2743,9 @@
           }
         }
       }
+    },
+    "What would you like to transcribe today?" : {
+
     },
     "Whisper Models" : {
       "localizations" : {
