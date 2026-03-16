@@ -108,16 +108,47 @@ actor TranscriptionService {
             }
         }
 
+        // Filter and deduplicate segments
+        var lastText = ""
+        var repeatCount = 0
+
         for whisperSeg in segments {
-            let text = whisperSeg.text
-            // Skip silence/noise segments
-            if text.trimmingCharacters(in: .whitespaces).isEmpty ||
-               text.contains("[SILENCE]") ||
-               text.contains("[BLANK_AUDIO]") ||
-               text.contains("(silence)") ||
-               text.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 {
+            let text = whisperSeg.text.trimmingCharacters(in: .whitespaces)
+
+            // Skip empty/noise segments
+            if text.isEmpty || text.count < 2 ||
+               text.contains("[SILENCE]") || text.contains("[BLANK_AUDIO]") ||
+               text.contains("(silence)") || text.contains("[MUSIC") {
                 continue
             }
+
+            // Detect repeated hallucinations (same text 3+ times in a row)
+            if text == lastText {
+                repeatCount += 1
+                if repeatCount >= 2 {
+                    logger.debug("Skipping repeated hallucination: \(text)")
+                    continue
+                }
+            } else {
+                repeatCount = 0
+            }
+            lastText = text
+
+            // Skip known hallucination patterns (very short repeated phrases)
+            let lowerText = text.lowercased().trimmingCharacters(in: .punctuationCharacters)
+            let hallucinations = [
+                "grazie", "thanks", "thank you", "bye", "sottotitoli",
+                "sottotitoli e revisione", "amara.org", "mohammedweb",
+                "silenzio", "applausi", "musica",
+            ]
+            if hallucinations.contains(lowerText) {
+                // Only skip if it's a standalone hallucination (very short segment)
+                if whisperSeg.endTime - whisperSeg.startTime < 3.0 {
+                    logger.debug("Skipping hallucination: \(text)")
+                    continue
+                }
+            }
+
             let segment = Segment(startTime: whisperSeg.startTime, endTime: whisperSeg.endTime, text: text)
             segment.transcription = transcription
             modelContext.insert(segment)
