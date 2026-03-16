@@ -27,7 +27,7 @@ struct OnboardingView: View {
                 // Logo
                 VStack(spacing: 12) {
                     HStack(spacing: 4) {
-                        ForEach([16, 28, 40, 52, 40, 28, 16], id: \.self) { height in
+                        ForEach(Array([16, 28, 40, 52, 40, 28, 16].enumerated()), id: \.offset) { _, height in
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(accentBlue)
                                 .frame(width: 4, height: CGFloat(height))
