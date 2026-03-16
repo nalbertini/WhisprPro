@@ -10,6 +10,7 @@ final class MixedAudioService {
     var isRecording = false
     var elapsedTime: TimeInterval = 0
     var audioLevel: Float = 0
+    var systemAudioAvailable = false
 
     private var micEngine: AVAudioEngine?
     private var micConverter: AVAudioConverter?
@@ -55,8 +56,15 @@ final class MixedAudioService {
         // Start mic capture
         try startMicCapture()
 
-        // Start system audio capture
-        try await startSystemCapture()
+        // Try system audio — fall back to mic-only if denied
+        do {
+            try await startSystemCapture()
+            systemAudioAvailable = true
+            logger.info("Mixed recording: mic + system audio")
+        } catch {
+            systemAudioAvailable = false
+            logger.warning("System audio unavailable — recording mic only. Grant Screen Recording in System Settings for full meeting capture.")
+        }
 
         isRecording = true
         elapsedTime = 0
