@@ -321,11 +321,14 @@ struct MeetingDashboardView: View {
 
         // Also start live captions for real-time transcript
         captionService.language = meetingLanguage
+        let model = UserDefaults.standard.string(forKey: "defaultModel") ?? "tiny"
         Task {
             do {
-                try await captionService.start(modelName: UserDefaults.standard.string(forKey: "defaultModel") ?? "tiny")
+                try await captionService.start(modelName: model)
             } catch {
-                // Captions failed but recording continues
+                await MainActor.run {
+                    errorMessage = "Live captions: \(error.localizedDescription)"
+                }
             }
         }
     }
