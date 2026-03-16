@@ -69,14 +69,19 @@ final class MixedAudioService {
         isRecording = true
         elapsedTime = 0
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.elapsedTime += 1.0
+        // Timer must be on main thread
+        await MainActor.run {
+            timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                self?.elapsedTime += 1.0
+            }
         }
 
-        // Start mixing loop
-        startMixingLoop()
+        // Start mixing loop on main thread too
+        await MainActor.run {
+            startMixingLoop()
+        }
 
-        logger.info("Mixed recording started (mic + system)")
+        logger.info("Mixed recording started (mic + system, systemAudio: \(self.systemAudioAvailable))")
     }
 
     private func startMicCapture() throws {
