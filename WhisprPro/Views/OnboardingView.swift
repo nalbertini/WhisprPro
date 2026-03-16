@@ -64,8 +64,8 @@ struct OnboardingView: View {
                     PermissionRow(
                         icon: "rectangle.on.rectangle",
                         title: "Screen Recording",
-                        description: "Capture audio from other apps",
-                        detail: "Used by Meeting and System Audio to record Zoom, Meet, Teams etc.",
+                        description: "Capture audio from other apps (optional)",
+                        detail: "Only needed for Meeting mode. Click to open System Settings and add WhisprPro.",
                         status: screenStatus,
                         color: .orange,
                         action: requestScreenRecording
@@ -124,19 +124,9 @@ struct OnboardingView: View {
         @unknown default: micStatus = .unknown
         }
 
-        // Screen Recording - try to get shareable content
-        Task {
-            do {
-                let content = try await SCShareableContent.current
-                await MainActor.run {
-                    screenStatus = content.displays.isEmpty ? .denied : .granted
-                }
-            } catch {
-                await MainActor.run {
-                    screenStatus = .unknown
-                }
-            }
-        }
+        // Screen Recording - can't check without triggering popup
+        // Show as "unknown" so user can open Settings manually
+        screenStatus = .unknown
     }
 
     private func requestMicrophone() {
@@ -148,26 +138,12 @@ struct OnboardingView: View {
     }
 
     private func requestScreenRecording() {
-        Task {
-            do {
-                let content = try await SCShareableContent.current
-                await MainActor.run {
-                    if content.displays.isEmpty {
-                        screenStatus = .denied
-                    } else {
-                        screenStatus = .granted
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    screenStatus = .denied
-                    // Open System Settings
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
+        // Can't request programmatically — open System Settings directly
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
         }
+        // Mark as granted since we can't verify — will be requested at runtime when needed
+        screenStatus = .granted
     }
 }
 
