@@ -34,6 +34,15 @@ struct InlineRecordingView: View {
     }
 
     var body: some View {
+        if sourceMode == 2 {
+            MeetingDashboardView(viewModel: viewModel)
+        } else {
+            micRecordingView
+        }
+    }
+
+    @ViewBuilder
+    private var micRecordingView: some View {
         VStack(spacing: 0) {
             Spacer()
 
