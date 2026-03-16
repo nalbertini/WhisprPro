@@ -239,9 +239,5 @@ private struct PermissionRow: View {
         .padding(14)
         .background(Color(red: 0.173, green: 0.173, blue: 0.180))
         .cornerRadius(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color(red: 0.227, green: 0.227, blue: 0.235), lineWidth: 1)
-        )
     }
 }
