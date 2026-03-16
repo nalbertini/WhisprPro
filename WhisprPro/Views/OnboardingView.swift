@@ -54,7 +54,8 @@ struct OnboardingView: View {
                     PermissionRow(
                         icon: "mic.fill",
                         title: "Microphone",
-                        description: "Record audio for transcription",
+                        description: "Record your voice for transcription",
+                        detail: "Used by Record, Meeting and Live Captions",
                         status: micStatus,
                         color: accentRed,
                         action: requestMicrophone
@@ -63,7 +64,8 @@ struct OnboardingView: View {
                     PermissionRow(
                         icon: "rectangle.on.rectangle",
                         title: "Screen Recording",
-                        description: "Capture system audio for meetings",
+                        description: "Capture audio from other apps",
+                        detail: "Used by Meeting and System Audio to record Zoom, Meet, Teams etc.",
                         status: screenStatus,
                         color: .orange,
                         action: requestScreenRecording
@@ -175,6 +177,7 @@ private struct PermissionRow: View {
     let icon: String
     let title: String
     let description: String
+    var detail: String = ""
     let status: OnboardingView.PermissionStatus
     let color: Color
     let action: () -> Void
@@ -188,13 +191,18 @@ private struct PermissionRow: View {
                 .background(color.opacity(0.12))
                 .cornerRadius(10)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Color(red: 0.961, green: 0.961, blue: 0.969))
                 Text(description)
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color(red: 0.388, green: 0.388, blue: 0.400))
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color(red: 0.557, green: 0.557, blue: 0.576))
+                if !detail.isEmpty {
+                    Text(detail)
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color(red: 0.388, green: 0.388, blue: 0.400))
+                }
             }
 
             Spacer()
