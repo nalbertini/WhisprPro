@@ -207,10 +207,30 @@ struct InlineRecordingView: View {
 
                 // Error
                 if let error = errorMessage {
-                    Text(error)
-                        .font(.system(size: 12))
-                        .foregroundStyle(accentRed)
-                        .padding(.horizontal, 40)
+                    VStack(spacing: 8) {
+                        Text(error)
+                            .font(.system(size: 12))
+                            .foregroundStyle(accentRed)
+                            .multilineTextAlignment(.center)
+
+                        if error.contains("Screen") || error.contains("screen") || error.contains("display") || error.contains("TCC") || error.contains("schermo") {
+                            Button {
+                                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            } label: {
+                                Text("Open Screen Recording Settings")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 5)
+                                    .background(cardBackground)
+                                    .cornerRadius(5)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 40)
                 }
             }
             .frame(maxWidth: 500)

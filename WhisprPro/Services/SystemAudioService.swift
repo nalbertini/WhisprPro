@@ -177,7 +177,7 @@ enum SystemAudioError: Error, LocalizedError {
         switch self {
         case .noDisplayFound: "No display found for system audio capture"
         case .noRecording: "No recording in progress"
-        case .permissionDenied: "Screen recording permission required"
+        case .permissionDenied: "Screen Recording permission needed. Open System Settings → Privacy & Security → Screen Recording and enable WhisprPro."
         }
     }
 }

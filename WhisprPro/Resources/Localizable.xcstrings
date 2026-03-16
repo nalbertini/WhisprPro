@@ -125,6 +125,9 @@
     "AI Assistant" : {
 
     },
+    "Allow" : {
+
+    },
     "Arabic" : {
 
     },
@@ -381,6 +384,9 @@
           }
         }
       }
+    },
+    "Continue Anyway" : {
+
     },
     "Copy" : {
 
@@ -872,6 +878,9 @@
       }
     },
     "German" : {
+
+    },
+    "Get Started" : {
 
     },
     "Go to Settings > Models to download one" : {
@@ -1744,6 +1753,9 @@
         }
       }
     },
+    "PERMISSIONS NEEDED" : {
+
+    },
     "Polish" : {
 
     },
@@ -1844,6 +1856,9 @@
           }
         }
       }
+    },
+    "Ready to go!" : {
+
     },
     "Recent" : {
       "localizations" : {
@@ -1979,6 +1994,9 @@
 
     },
     "Russian" : {
+
+    },
+    "Screen Recording permission will be requested when you use Meeting or System Audio mode." : {
 
     },
     "Search" : {
@@ -2503,6 +2521,9 @@
         }
       }
     },
+    "Transcribe audio locally with Whisper" : {
+
+    },
     "Transcribe Time" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2812,6 +2833,9 @@
           }
         }
       }
+    },
+    "You can grant permissions later in System Settings" : {
+
     },
     "YouTube" : {
 
