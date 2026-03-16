@@ -22,6 +22,7 @@ struct ContentView: View {
     @State private var showCaptions = false
     @State private var showYouTubeImport = false
     @State private var meetingDetector = MeetingDetectorService()
+    @State private var onboardingComplete = UserDefaults.standard.bool(forKey: "onboardingComplete")
 
     // Design tokens
     private let textMuted = Color(red: 0.290, green: 0.290, blue: 0.306)       // #4A4A4E
@@ -32,7 +33,9 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if let viewModel {
+            if !onboardingComplete {
+                OnboardingView(isComplete: $onboardingComplete)
+            } else if let viewModel {
                 mainContent(viewModel: viewModel)
             } else {
                 ProgressView()
