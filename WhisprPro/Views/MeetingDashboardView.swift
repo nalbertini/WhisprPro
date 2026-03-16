@@ -3,7 +3,7 @@ import AppKit
 
 struct MeetingDashboardView: View {
     @Bindable var viewModel: TranscriptionViewModel
-    @State private var recordingService = RecordingService()
+    @State private var mixedAudioService = MixedAudioService()
     @State private var captionService = RealtimeCaptionService()
     @State private var selectedDeviceID: String?
     @State private var errorMessage: String?
@@ -36,7 +36,7 @@ struct MeetingDashboardView: View {
                 // Recording indicator
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(recordingService.isRecording ? accentRed : .gray)
+                        .fill(mixedAudioService.isRecording ? accentRed : .gray)
                         .frame(width: 10, height: 10)
                     Text("Meeting")
                         .font(.system(size: 17, weight: .semibold))
@@ -44,9 +44,9 @@ struct MeetingDashboardView: View {
                 }
 
                 // Timer
-                Text(formatTime(recordingService.elapsedTime))
+                Text(formatTime(mixedAudioService.elapsedTime))
                     .font(.system(size: 15, design: .monospaced))
-                    .foregroundStyle(recordingService.isRecording ? textPrimary : textQuaternary)
+                    .foregroundStyle(mixedAudioService.isRecording ? textPrimary : textQuaternary)
 
                 Spacer()
 
@@ -62,7 +62,7 @@ struct MeetingDashboardView: View {
                 .frame(width: 60)
 
                 // Controls
-                if recordingService.isRecording {
+                if mixedAudioService.isRecording {
                     Button {
                         stopMeeting()
                     } label: {
@@ -310,16 +310,20 @@ struct MeetingDashboardView: View {
 
     private func startMeeting() {
         errorMessage = nil
-        do {
-            try recordingService.startRecording(deviceID: selectedDeviceID)
-        } catch {
-            errorMessage = error.localizedDescription
-            return
-        }
 
-        // Also start live captions
-        captionService.language = meetingLanguage
+        // Start mixed audio (mic + system)
         Task {
+            do {
+                try await mixedAudioService.startRecording()
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                }
+                return
+            }
+
+            // Also start live captions
+            captionService.language = meetingLanguage
             do {
                 try await captionService.start(modelName: UserDefaults.standard.string(forKey: "defaultModel") ?? "tiny")
             } catch {
@@ -335,11 +339,15 @@ struct MeetingDashboardView: View {
         // Stop recording and transcribe
         Task {
             do {
-                let url = try recordingService.stopRecording()
-                viewModel.isRecordingMode = false
+                let url = try await mixedAudioService.stopRecording()
+                await MainActor.run {
+                    viewModel.isRecordingMode = false
+                }
                 await viewModel.importFile(url: url)
             } catch {
-                errorMessage = error.localizedDescription
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                }
             }
         }
     }
@@ -381,7 +389,7 @@ struct MeetingDashboardView: View {
     private func copyMeetingNotes() {
         var notes = "# Meeting Notes\n"
         notes += "**Date:** \(DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short))\n"
-        notes += "**Duration:** \(formatTime(recordingService.elapsedTime))\n\n"
+        notes += "**Duration:** \(formatTime(mixedAudioService.elapsedTime))\n\n"
 
         if !speakers.isEmpty {
             notes += "## Participants\n"
