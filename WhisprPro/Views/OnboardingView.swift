@@ -6,7 +6,6 @@ struct OnboardingView: View {
     @Binding var isComplete: Bool
 
     @State private var micStatus: PermissionStatus = .checking
-    @State private var screenStatus: PermissionStatus = .checking
 
     enum PermissionStatus: Equatable {
         case checking, granted, denied, unknown
@@ -61,24 +60,27 @@ struct OnboardingView: View {
                         action: requestMicrophone
                     )
 
-                    PermissionRow(
-                        icon: "rectangle.on.rectangle",
-                        title: "Screen Recording",
-                        description: "Capture audio from other apps (optional)",
-                        detail: "Only needed for Meeting mode. Click to open System Settings and add WhisprPro.",
-                        status: screenStatus,
-                        color: .orange,
-                        action: requestScreenRecording
-                    )
+                    // Screen Recording info (no permission request - handled at runtime)
+                    HStack(spacing: 14) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 14))
+                            .foregroundStyle(textQuaternary)
+                        Text("Screen Recording permission will be requested when you use Meeting or System Audio mode.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(textQuaternary)
+                            .lineLimit(2)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                 }
                 .frame(maxWidth: 420)
 
                 // Status summary
-                if micStatus == .granted && screenStatus == .granted {
+                if micStatus == .granted {
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(accentGreen)
-                        Text("All permissions granted!")
+                        Text("Ready to go!")
                             .font(.system(size: 13))
                             .foregroundStyle(accentGreen)
                     }
@@ -124,9 +126,7 @@ struct OnboardingView: View {
         @unknown default: micStatus = .unknown
         }
 
-        // Screen Recording - can't check without triggering popup
-        // Show as "unknown" so user can open Settings manually
-        screenStatus = .unknown
+        // Screen Recording handled at runtime — not checked here
     }
 
     private func requestMicrophone() {
@@ -137,14 +137,6 @@ struct OnboardingView: View {
         }
     }
 
-    private func requestScreenRecording() {
-        // Can't request programmatically — open System Settings directly
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-            NSWorkspace.shared.open(url)
-        }
-        // Mark as granted since we can't verify — will be requested at runtime when needed
-        screenStatus = .granted
-    }
 }
 
 // MARK: - Permission Row
