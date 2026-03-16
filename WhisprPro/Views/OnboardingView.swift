@@ -1,18 +1,15 @@
 import SwiftUI
 import AVFoundation
-import Speech
 import ScreenCaptureKit
 
 struct OnboardingView: View {
     @Binding var isComplete: Bool
 
-    @State private var micStatus: PermissionStatus = .unknown
-    @State private var screenStatus: PermissionStatus = .unknown
-    @State private var speechStatus: PermissionStatus = .unknown
-    @State private var currentStep = 0
+    @State private var micStatus: PermissionStatus = .checking
+    @State private var screenStatus: PermissionStatus = .checking
 
-    enum PermissionStatus {
-        case unknown, granted, denied
+    enum PermissionStatus: Equatable {
+        case checking, granted, denied, unknown
     }
 
     private let textPrimary = Color(red: 0.961, green: 0.961, blue: 0.969)
@@ -21,8 +18,6 @@ struct OnboardingView: View {
     private let accentBlue = Color(red: 0.039, green: 0.518, blue: 1.0)
     private let accentGreen = Color(red: 0.188, green: 0.820, blue: 0.345)
     private let accentRed = Color(red: 1.0, green: 0.271, blue: 0.227)
-    private let cardBackground = Color(red: 0.173, green: 0.173, blue: 0.180)
-    private let borderColor = Color(red: 0.227, green: 0.227, blue: 0.235)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -73,34 +68,36 @@ struct OnboardingView: View {
                         color: .orange,
                         action: requestScreenRecording
                     )
-
-                    PermissionRow(
-                        icon: "waveform",
-                        title: "Speech Recognition",
-                        description: "Auto-detect speakers (optional)",
-                        status: speechStatus,
-                        color: accentBlue,
-                        action: requestSpeechRecognition
-                    )
                 }
                 .frame(maxWidth: 420)
+
+                // Status summary
+                if micStatus == .granted && screenStatus == .granted {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(accentGreen)
+                        Text("All permissions granted!")
+                            .font(.system(size: 13))
+                            .foregroundStyle(accentGreen)
+                    }
+                }
 
                 // Continue button
                 Button {
                     isComplete = true
                     UserDefaults.standard.set(true, forKey: "onboardingComplete")
                 } label: {
-                    Text(allGranted ? "Get Started" : "Continue Anyway")
+                    Text(micStatus == .granted ? "Get Started" : "Continue Anyway")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 200)
                         .padding(.vertical, 10)
-                        .background(allGranted ? accentBlue : textQuaternary)
+                        .background(micStatus == .granted ? accentBlue : textQuaternary)
                         .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
 
-                if !allGranted {
+                if micStatus != .granted {
                     Text("You can grant permissions later in System Settings")
                         .font(.system(size: 11))
                         .foregroundStyle(textQuaternary)
@@ -116,27 +113,28 @@ struct OnboardingView: View {
         }
     }
 
-    private var allGranted: Bool {
-        micStatus == .granted
-    }
-
     private func checkPermissions() {
         // Microphone
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
         case .authorized: micStatus = .granted
         case .denied, .restricted: micStatus = .denied
-        default: micStatus = .unknown
+        case .notDetermined: micStatus = .unknown
+        @unknown default: micStatus = .unknown
         }
 
-        // Speech
-        switch SFSpeechRecognizer.authorizationStatus() {
-        case .authorized: speechStatus = .granted
-        case .denied, .restricted: speechStatus = .denied
-        default: speechStatus = .unknown
+        // Screen Recording - try to get shareable content
+        Task {
+            do {
+                let content = try await SCShareableContent.current
+                await MainActor.run {
+                    screenStatus = content.displays.isEmpty ? .denied : .granted
+                }
+            } catch {
+                await MainActor.run {
+                    screenStatus = .unknown
+                }
+            }
         }
-
-        // Screen recording - can't check directly, assume unknown
-        screenStatus = .unknown
     }
 
     private func requestMicrophone() {
@@ -148,30 +146,24 @@ struct OnboardingView: View {
     }
 
     private func requestScreenRecording() {
-        // Open System Settings to Screen Recording
         Task {
-            // Trigger the permission dialog by attempting capture
             do {
                 let content = try await SCShareableContent.current
-                if content.displays.isEmpty {
-                    screenStatus = .denied
-                } else {
-                    screenStatus = .granted
+                await MainActor.run {
+                    if content.displays.isEmpty {
+                        screenStatus = .denied
+                    } else {
+                        screenStatus = .granted
+                    }
                 }
             } catch {
-                // Open System Settings
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                    NSWorkspace.shared.open(url)
+                await MainActor.run {
+                    screenStatus = .denied
+                    // Open System Settings
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                        NSWorkspace.shared.open(url)
+                    }
                 }
-                screenStatus = .unknown
-            }
-        }
-    }
-
-    private func requestSpeechRecognition() {
-        SFSpeechRecognizer.requestAuthorization { status in
-            DispatchQueue.main.async {
-                speechStatus = status == .authorized ? .granted : .denied
             }
         }
     }
@@ -208,12 +200,15 @@ private struct PermissionRow: View {
             Spacer()
 
             switch status {
+            case .checking:
+                ProgressView()
+                    .scaleEffect(0.7)
             case .granted:
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 20))
                     .foregroundStyle(Color(red: 0.188, green: 0.820, blue: 0.345))
             case .denied:
-                Button("Settings") {
+                Button("Open Settings") {
                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy") {
                         NSWorkspace.shared.open(url)
                     }
