@@ -3,7 +3,7 @@ import AppKit
 
 struct MeetingDashboardView: View {
     @Bindable var viewModel: TranscriptionViewModel
-    @State private var mixedAudioService = MixedAudioService()
+    @State private var recordingService = RecordingService()
     @State private var captionService = RealtimeCaptionService()
     @State private var selectedDeviceID: String?
     @State private var errorMessage: String?
@@ -36,7 +36,7 @@ struct MeetingDashboardView: View {
                 // Recording indicator
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(mixedAudioService.isRecording ? accentRed : .gray)
+                        .fill(recordingService.isRecording ? accentRed : .gray)
                         .frame(width: 10, height: 10)
                     Text("Meeting")
                         .font(.system(size: 17, weight: .semibold))
@@ -44,9 +44,9 @@ struct MeetingDashboardView: View {
                 }
 
                 // Timer
-                Text(formatTime(mixedAudioService.elapsedTime))
+                Text(formatTime(recordingService.elapsedTime))
                     .font(.system(size: 15, design: .monospaced))
-                    .foregroundStyle(mixedAudioService.isRecording ? textPrimary : textQuaternary)
+                    .foregroundStyle(recordingService.isRecording ? textPrimary : textQuaternary)
 
                 Spacer()
 
@@ -62,7 +62,7 @@ struct MeetingDashboardView: View {
                 .frame(width: 60)
 
                 // Controls
-                if mixedAudioService.isRecording {
+                if recordingService.isRecording {
                     Button {
                         stopMeeting()
                     } label: {
@@ -311,19 +311,17 @@ struct MeetingDashboardView: View {
     private func startMeeting() {
         errorMessage = nil
 
-        // Start mixed audio (mic + system)
-        Task {
-            do {
-                try await mixedAudioService.startRecording()
-            } catch {
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                }
-                return
-            }
+        // Start mic recording (proven to work)
+        do {
+            try recordingService.startRecording(deviceID: selectedDeviceID)
+        } catch {
+            errorMessage = error.localizedDescription
+            return
+        }
 
-            // Also start live captions
-            captionService.language = meetingLanguage
+        // Also start live captions for real-time transcript
+        captionService.language = meetingLanguage
+        Task {
             do {
                 try await captionService.start(modelName: UserDefaults.standard.string(forKey: "defaultModel") ?? "tiny")
             } catch {
@@ -333,22 +331,16 @@ struct MeetingDashboardView: View {
     }
 
     private func stopMeeting() {
-        // Stop captions
         captionService.stop()
 
-        // Stop recording and transcribe
-        Task {
-            do {
-                let url = try await mixedAudioService.stopRecording()
-                await MainActor.run {
-                    viewModel.isRecordingMode = false
-                }
+        do {
+            let url = try recordingService.stopRecording()
+            viewModel.isRecordingMode = false
+            Task {
                 await viewModel.importFile(url: url)
-            } catch {
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                }
             }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -389,7 +381,7 @@ struct MeetingDashboardView: View {
     private func copyMeetingNotes() {
         var notes = "# Meeting Notes\n"
         notes += "**Date:** \(DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short))\n"
-        notes += "**Duration:** \(formatTime(mixedAudioService.elapsedTime))\n\n"
+        notes += "**Duration:** \(formatTime(recordingService.elapsedTime))\n\n"
 
         if !speakers.isEmpty {
             notes += "## Participants\n"
